@@ -1,0 +1,10 @@
+@import "tailwindcss";
+@import "@storefront-ui/vue/tailwind-config";
+@plugin "@storefront-ui/typography";
+
+@source '../**/*.vue';
+@source '../node_modules/@storefront-ui/vue';
+
+body {
+  margin: 0;
+}
