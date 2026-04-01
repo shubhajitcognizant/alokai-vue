@@ -44,10 +44,10 @@ import {
 } from '@storefront-ui/vue'
 
 // CartDrawer is our own component — the sliding cart sidebar.
-import CartDrawer from './CartDrawer.vue'
+import CartDrawer from '../components/CartDrawer.vue'
 
 // useCart() gives us access to the shared cart state and actions.
-import { useCart } from '../stores/cart'
+import { useCart } from '../modules/cart/useCart'
 
 // ─────────────────────────────────────────────
 // TYPESCRIPT INTERFACE

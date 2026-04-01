@@ -1,17 +1,12 @@
 {
-  "name": "alokai-vue-monorepo",
+  "name": "@alokai-vue/storefront",
   "private": true,
   "version": "0.0.0",
   "type": "module",
-  "workspaces": [
-    "apps/storefront",
-    "apps/storefront-middleware"
-  ],
   "scripts": {
     "dev": "vite",
     "build": "vue-tsc -b && vite build",
-    "preview": "vite preview",
-    "dev:middleware": "npm run dev --workspace=apps/storefront-middleware"
+    "preview": "vite preview"
   },
   "dependencies": {
     "vue": "^3.5.30"

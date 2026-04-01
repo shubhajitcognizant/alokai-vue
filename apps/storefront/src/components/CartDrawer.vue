@@ -43,7 +43,7 @@ import {
 
 // Import our shared cart store composable.
 // Destructure only the pieces this component needs.
-import { useCart } from '../stores/cart'
+import { useCart } from '../modules/cart/useCart'
 
 const { items, isOpen, removeItem, updateQty, subtotal, savings } = useCart()
 
