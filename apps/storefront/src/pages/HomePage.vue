@@ -48,6 +48,8 @@ import CartDrawer from '../components/CartDrawer.vue'
 
 // useCart() gives us access to the shared cart state and actions.
 import { useCart } from '../modules/cart/useCart'
+import { useRouter } from 'vue-router'
+import { useAuth } from '../modules/auth/useAuth'
 
 // ─────────────────────────────────────────────
 // TYPESCRIPT INTERFACE
@@ -86,6 +88,8 @@ interface ApiProduct {
  */
 const { isOpen, addItem, count: cartCount, loadCart } = useCart()
 
+const router = useRouter()
+const { isLoggedIn, currentUser, logout } = useAuth()
 // ─────────────────────────────────────────────
 // LOCAL STATE
 // ─────────────────────────────────────────────
@@ -276,7 +280,15 @@ onMounted(async () => {
           <SfIconSearch class="md:hidden" />
         </SfButton>
 
-        <SfButton variant="tertiary" square>
+        <div v-if="isLoggedIn" class="flex items-center gap-1">
+          <span class="text-sm font-medium text-neutral-700 hidden md:block">
+            {{ currentUser?.name.split(' ')[0] }}
+          </span>
+          <SfButton variant="tertiary" square @click="logout">
+            <SfIconPerson class="text-primary-700" />
+          </SfButton>
+        </div>
+        <SfButton v-else variant="tertiary" square @click = "router.push('/login')"">
           <SfIconPerson />
         </SfButton>
 

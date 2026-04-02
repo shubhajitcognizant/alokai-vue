@@ -25,3 +25,8 @@ export async function getCarts() {
   const res = await fetch(`${BASE_URL}/carts`)
   return res.json()
 }
+
+export async function getUsers() {
+  const res = await fetch(`${BASE_URL}/users`)
+  return res.json()
+}
