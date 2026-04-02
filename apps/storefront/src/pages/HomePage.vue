@@ -280,15 +280,27 @@ onMounted(async () => {
           <SfIconSearch class="md:hidden" />
         </SfButton>
 
-        <div v-if="isLoggedIn" class="flex items-center gap-1">
-          <span class="text-sm font-medium text-neutral-700 hidden md:block">
-            {{ currentUser?.name.split(' ')[0] }}
-          </span>
-          <SfButton variant="tertiary" square @click="logout">
+        <div v-if="isLoggedIn" class="relative group">
+          <SfButton variant="tertiary" square>
             <SfIconPerson class="text-primary-700" />
           </SfButton>
+
+          <!-- Dropdown menu-->
+          <div class = "absolute right-0 top-full mt-1 w-48 bg-white rounded-xl shadow-lg border border-neutral-100 overflow-hidden opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-20">
+            <div class="px-4 py-3 border-b border-neutral-100">
+              <p class="text-xs text-neutral-400">Logged in as</p>
+              <p class="text-sm font-semibold text-neutral-800 truncate">{{ currentUser?.username }}</p>
+            </div>
+            <SfButton
+              variant="tertiary"
+              class="w-full !justify-start !text-red-500 hover:!bg-red-50"
+              @click="logout"
+            >
+              Logout
+            </SfButton>
+          </div>
         </div>
-        <SfButton v-else variant="tertiary" square @click = "router.push('/login')"">
+        <SfButton v-else variant="tertiary" square @click = "router.push('/login')">
           <SfIconPerson />
         </SfButton>
 
