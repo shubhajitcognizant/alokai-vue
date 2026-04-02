@@ -1,5 +1,6 @@
 @import "tailwindcss";
 @import "@storefront-ui/vue/tailwind-config.css";
+
 @plugin "@storefront-ui/typography";
 
 @source '../../**/*.vue';
