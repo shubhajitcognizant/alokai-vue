@@ -24,34 +24,67 @@ async function handleSubmit() {
 <template>
   <div class="min-h-screen bg-neutral-50 flex items-center justify-center px-4">
     <div class="bg-white rounded-2xl shadow-xl w-full max-w-md p-8">
-
       <div class="flex items-center gap-2 mb-6">
         <SfIconPerson class="text-primary-700" />
-        <h1 class="text-2xl font-bold">Login</h1>
+        <h1 class="text-2xl font-bold">
+          Login
+        </h1>
       </div>
 
-      <form class="space-y-4" @submit.prevent="handleSubmit">
+      <form
+        class="space-y-4"
+        @submit.prevent="handleSubmit"
+      >
         <div>
           <label class="block text-sm font-medium text-neutral-700 mb-1">Email</label>
-          <SfInput v-model="email" type="email" placeholder="Enter your email address" class="w-full" required />
+          <SfInput
+            v-model="email"
+            type="email"
+            placeholder="Enter your email address"
+            class="w-full"
+            required
+          />
         </div>
         <div>
           <label class="block text-sm font-medium text-neutral-700 mb-1">Password</label>
-          <SfInput v-model="password" type="password" placeholder="Password" class="w-full" required />
+          <SfInput
+            v-model="password"
+            type="password"
+            placeholder="Password"
+            class="w-full"
+            required
+          />
         </div>
 
-        <p v-if="loginError" class="text-sm text-red-500">{{ loginError }}</p>
+        <p
+          v-if="loginError"
+          class="text-sm text-red-500"
+        >
+          {{ loginError }}
+        </p>
 
-        <SfButton type="submit" class="w-full" size="lg" :disabled="loginLoading">
-          <SfLoaderCircular v-if="loginLoading" size="sm" class="mr-2" />
+        <SfButton
+          type="submit"
+          class="w-full"
+          size="lg"
+          :disabled="loginLoading"
+        >
+          <SfLoaderCircular
+            v-if="loginLoading"
+            size="sm"
+            class="mr-2"
+          />
           {{ loginLoading ? 'Loading...' : 'Log In' }}
         </SfButton>
 
-        <SfButton variant="tertiary" class="w-full" @click="router.push('/')">
+        <SfButton
+          variant="tertiary"
+          class="w-full"
+          @click="router.push('/')"
+        >
           Back to Shop
         </SfButton>
       </form>
-
     </div>
   </div>
 </template>

@@ -78,14 +78,20 @@ const total = () => +(subtotal.value).toFixed(2)
         `items.length` — the number of unique products in the cart
         (not total quantity — that would be `count` from the store).
       -->
-      <h2 class="text-lg font-semibold">Shopping Cart ({{ items.length }})</h2>
+      <h2 class="text-lg font-semibold">
+        Shopping Cart ({{ items.length }})
+      </h2>
 
       <!--
         `square` prop makes the button equal width & height (icon button).
         `variant="tertiary"` = ghost/transparent button style.
         Clicking sets isOpen to false, which triggers SfDrawer to close.
       -->
-      <SfButton variant="tertiary" square @click="isOpen = false">
+      <SfButton
+        variant="tertiary"
+        square
+        @click="isOpen = false"
+      >
         <SfIconClose />
       </SfButton>
     </div>
@@ -101,27 +107,38 @@ const total = () => +(subtotal.value).toFixed(2)
       class="flex flex-col items-center justify-center flex-1 gap-4 text-neutral-500 py-20"
     >
       <SfIconShoppingCart class="w-16 h-16 text-neutral-300" />
-      <p class="text-lg font-medium">Your cart is empty</p>
-      <SfButton variant="secondary" @click="isOpen = false">Continue Shopping</SfButton>
+      <p class="text-lg font-medium">
+        Your cart is empty
+      </p>
+      <SfButton
+        variant="secondary"
+        @click="isOpen = false"
+      >
+        Continue Shopping
+      </SfButton>
     </div>
 
     <!-- ── CART ITEMS + SUMMARY ───────────────────── -->
-    <div v-else class="flex flex-col flex-1 overflow-hidden">
-
+    <div
+      v-else
+      class="flex flex-col flex-1 overflow-hidden"
+    >
       <!--
         CART ITEMS LIST
         `overflow-y-auto` — makes this area scrollable if items exceed the height.
         `divide-y` — adds a horizontal border between each <li> automatically.
       -->
       <ul class="flex-1 overflow-y-auto divide-y divide-neutral-100 px-4">
-
         <!--
           `v-for` — loops over the items array and renders one <li> per item.
           `:key` — a unique identifier Vue uses to track each item efficiently.
                    Always use a stable, unique value (like product_id), not the index.
         -->
-        <li v-for="item in items" :key="item.product_id" class="flex gap-4 py-4">
-
+        <li
+          v-for="item in items"
+          :key="item.product_id"
+          class="flex gap-4 py-4"
+        >
           <!-- Product Image -->
           <div class="w-20 h-20 shrink-0 bg-neutral-100 rounded-lg overflow-hidden">
             <!--
@@ -136,7 +153,7 @@ const total = () => +(subtotal.value).toFixed(2)
               :alt="item.name"
               class="w-full h-full object-cover"
               @error="($event.target as HTMLImageElement).src = `https://placehold.co/80x80?text=${encodeURIComponent(item.name.split(' ')[0])}`"
-            />
+            >
           </div>
 
           <!-- Product Details -->
@@ -145,7 +162,9 @@ const total = () => +(subtotal.value).toFixed(2)
               `line-clamp-2` — Tailwind utility that limits text to 2 lines,
               adding "..." if it overflows. Prevents long names from breaking the layout.
             -->
-            <p class="text-sm font-medium text-neutral-800 line-clamp-2 mb-1">{{ item.name }}</p>
+            <p class="text-sm font-medium text-neutral-800 line-clamp-2 mb-1">
+              {{ item.name }}
+            </p>
 
             <!-- Price row: discounted price + crossed-out original price -->
             <div class="flex items-center gap-2 mb-2">
@@ -154,14 +173,16 @@ const total = () => +(subtotal.value).toFixed(2)
                 `v-if="item.originalPrice"` — only renders if originalPrice is not null.
                 null means no discount, so we hide the strikethrough price.
               -->
-              <span v-if="item.originalPrice" class="text-xs text-neutral-400 line-through">
+              <span
+                v-if="item.originalPrice"
+                class="text-xs text-neutral-400 line-through"
+              >
                 ${{ item.originalPrice.toFixed(2) }}
               </span>
             </div>
 
             <!-- Quantity Controls -->
             <div class="flex items-center gap-2">
-
               <!-- Decrease button: calls updateQty with current quantity - 1.
                    If qty reaches 0, the store's updateQty function calls removeItem automatically. -->
               <SfButton
@@ -209,7 +230,6 @@ const total = () => +(subtotal.value).toFixed(2)
         The items list above it scrolls, but this stays fixed.
       -->
       <div class="border-t border-neutral-200 px-4 pt-4 pb-6 space-y-3">
-
         <!-- Subtotal row -->
         <div class="flex justify-between text-sm text-neutral-600">
           <span>Subtotal</span>
@@ -217,7 +237,10 @@ const total = () => +(subtotal.value).toFixed(2)
         </div>
 
         <!-- Savings row — only shown if there are discounted items -->
-        <div v-if="savings > 0" class="flex justify-between text-sm text-green-600">
+        <div
+          v-if="savings > 0"
+          class="flex justify-between text-sm text-green-600"
+        >
           <span>You save</span>
           <span>-${{ savings.toFixed(2) }}</span>
         </div>
@@ -239,12 +262,19 @@ const total = () => +(subtotal.value).toFixed(2)
         </div>
 
         <!-- Primary CTA button -->
-        <SfButton class="w-full mt-2" size="lg">
+        <SfButton
+          class="w-full mt-2"
+          size="lg"
+        >
           Proceed to Checkout
         </SfButton>
 
         <!-- Secondary action -->
-        <SfButton variant="tertiary" class="w-full" @click="isOpen = false">
+        <SfButton
+          variant="tertiary"
+          class="w-full"
+          @click="isOpen = false"
+        >
           Continue Shopping
         </SfButton>
       </div>
