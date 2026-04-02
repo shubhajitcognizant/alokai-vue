@@ -2,14 +2,14 @@ import { computed, ref } from "vue"
 
 interface ApiUser {
     user_id: number
-    name: string
+    username: string
     email: string
     password: string
 }
 
 export interface AuthUser {
     user_id: number
-    name: string
+    username: string
     email: string
 }
 
@@ -39,7 +39,7 @@ async function login(email: string, password: string): Promise<boolean> {
 
         currentUser.value = {
             user_id: match.user_id,
-            name: match.name,
+            username: match.username,
             email: match.email
         }
         
