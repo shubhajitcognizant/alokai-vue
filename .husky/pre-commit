@@ -2,7 +2,7 @@ export PATH="/opt/homebrew/bin:/usr/local/bin:$PATH"
 
 echo "Running lint checks before commit..."
 
-npm run lint
+npm run lint -- --max-warnings 0
 if [ $? -ne 0 ]; then
   echo "ESLint failed. Commit aborted. Run 'npm run cleancode:fix' to auto-fix issues."
   exit 1
