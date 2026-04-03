@@ -13,7 +13,18 @@ export interface AuthUser {
     email: string
 }
 
-const currentUser = ref<AuthUser | null>(null)
+const STORAGE_KEY = 'shopvue_user'
+
+function loadUserFromStorage(): AuthUser | null {
+    try {
+        const raw = localStorage.getItem(STORAGE_KEY)
+        return raw ? (JSON.parse(raw) as AuthUser) : null
+    } catch {
+        return null
+    }
+}
+
+const currentUser = ref<AuthUser | null>(loadUserFromStorage())
 const isLoginOpen = ref(false)
 const loginError = ref('')
 const loginLoading = ref(false)
@@ -37,12 +48,15 @@ async function login(email: string, password: string): Promise<boolean> {
             return false
         }
 
-        currentUser.value = {
+        const user: AuthUser = {
             user_id: match.user_id,
             username: match.username,
             email: match.email
         }
-        
+
+        currentUser.value = user
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(user))
+
         isLoginOpen.value = false
         return true
     } catch {
@@ -55,6 +69,7 @@ async function login(email: string, password: string): Promise<boolean> {
 
 function logout() {
     currentUser.value = null
+    localStorage.removeItem(STORAGE_KEY)
 }
 
 const isLoggedIn = computed(() => currentUser.value !== null)
