@@ -171,14 +171,35 @@ onMounted(async () => {
             </SfButton>
           </div>
         </div>
-        <SfButton
+        <div
           v-else
-          variant="tertiary"
-          square
-          @click="router.push('/login')"
+          class="relative group"
         >
-          <SfIconPerson />
-        </SfButton>
+          <SfButton
+            variant="tertiary"
+            square
+          >
+            <SfIconPerson />
+          </SfButton>
+
+          <!-- Guest dropdown -->
+          <div class="absolute right-0 top-full mt-1 w-48 bg-white rounded-xl shadow-lg border border-neutral-100 overflow-hidden opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-20">
+            <SfButton
+              variant="tertiary"
+              class="w-full !justify-start"
+              @click="router.push('/login')"
+            >
+              Login
+            </SfButton>
+            <SfButton
+              variant="tertiary"
+              class="w-full !justify-start"
+              @click="router.push('/signup')"
+            >
+              Sign Up
+            </SfButton>
+          </div>
+        </div>
 
         <SfButton
           variant="tertiary"
