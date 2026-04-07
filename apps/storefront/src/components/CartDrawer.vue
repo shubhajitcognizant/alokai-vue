@@ -44,8 +44,12 @@ import {
 // Import our shared cart store composable.
 // Destructure only the pieces this component needs.
 import { useCart } from '../modules/cart/useCart'
+import { useRouter } from 'vue-router'
+import { useAuth } from '../modules/auth/useAuth'
 
 const { items, isOpen, removeItem, updateQty, subtotal, savings } = useCart()
+const { isLoggedIn } = useAuth()
+const router = useRouter()
 
 /**
  * total() — A simple function (not computed) since it's just a formatted
@@ -53,6 +57,15 @@ const { items, isOpen, removeItem, updateQty, subtotal, savings } = useCart()
  * `.toFixed(2)` returns a string like "12.50", and `+` converts it back to a number.
  */
 const total = () => +(subtotal.value).toFixed(2)
+
+function handleCheckout() {
+  isOpen.value = false
+  if (isLoggedIn.value) {
+    router.push('')
+  } else {
+    router.push('/login')
+  }
+}
 </script>
 
 <template>
@@ -265,6 +278,7 @@ const total = () => +(subtotal.value).toFixed(2)
         <SfButton
           class="w-full mt-2"
           size="lg"
+          @click="handleCheckout"
         >
           Proceed to Checkout
         </SfButton>
