@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
+import { RouterLink } from 'vue-router'
 import {
   SfButton,
   SfBadge,
@@ -407,38 +408,49 @@ onMounted(async () => {
         :key="product.product_id"
         class="bg-white border border-neutral-200 rounded-xl overflow-hidden hover:shadow-md transition-shadow group"
       >
-        <div class="relative">
-          <img
-            :src="product.image"
-            :alt="product.name"
-            class="w-full aspect-square object-cover"
-          >
-          <span
-            v-if="product.badge"
-            :class="[
-              'absolute top-2 left-2 text-xs font-semibold px-2 py-0.5 rounded-full',
-              product.badge === 'Sale' ? 'bg-secondary-700 text-white' : 'bg-primary-700 text-white',
-            ]"
-          >
-            {{ product.badge }}
-          </span>
-          <SfButton
-            variant="tertiary"
-            square
-            size="sm"
-            class="absolute top-2 right-2 !bg-white shadow opacity-0 group-hover:opacity-100 transition-opacity"
-          >
-            <SfIconFavorite
-              class="text-neutral-500"
+        <!-- Product Image — clicking navigates to the detail page -->
+        <RouterLink
+          :to="`/product/${product.product_id}`"
+          class="block"
+        >
+          <div class="relative">
+            <img
+              :src="product.image"
+              :alt="product.name"
+              class="w-full aspect-square object-cover"
+            >
+            <span
+              v-if="product.badge"
+              :class="[
+                'absolute top-2 left-2 text-xs font-semibold px-2 py-0.5 rounded-full',
+                product.badge === 'Sale' ? 'bg-secondary-700 text-white' : 'bg-primary-700 text-white',
+              ]"
+            >
+              {{ product.badge }}
+            </span>
+            <SfButton
+              variant="tertiary"
+              square
               size="sm"
-            />
-          </SfButton>
-        </div>
+              class="absolute top-2 right-2 !bg-white shadow opacity-0 group-hover:opacity-100 transition-opacity"
+            >
+              <SfIconFavorite
+                class="text-neutral-500"
+                size="sm"
+              />
+            </SfButton>
+          </div>
+        </RouterLink>
 
         <div class="p-3">
-          <p class="text-sm text-neutral-700 font-medium leading-snug line-clamp-2 mb-1">
+          <!-- Product name — clicking navigates to the detail page -->
+          <RouterLink
+            :to="`/product/${product.product_id}`"
+            class="text-sm text-neutral-700 font-medium leading-snug line-clamp-2 mb-1"
+          >
             {{ product.name }}
-          </p>
+          </RouterLink>
+         
           <div class="flex items-center gap-1 mb-2">
             <SfRating
               :value="product.rating"
