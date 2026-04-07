@@ -217,7 +217,6 @@ onMounted(async () => {
           </p>
         </div>
 
-        <!-- Keywords -->
         <div
           v-if="product.keywords?.length"
           class="flex flex-wrap gap-2"
@@ -231,7 +230,6 @@ onMounted(async () => {
           </span>
         </div>
 
-        <!-- Quantity selector + Add to cart -->
         <div class="flex items-center gap-3 mt-2">
           <div class="flex items-center border border-neutral-300 rounded-lg overflow-hidden">
             <button
@@ -262,7 +260,6 @@ onMounted(async () => {
           </SfButton>
         </div>
 
-        <!-- Delivery note -->
         <p class="text-xs text-neutral-500 flex items-center gap-1">
           <SfIconLocalShipping />
           Free shipping on orders over $50
@@ -271,7 +268,6 @@ onMounted(async () => {
     </div>
   </main>
 
-  <!-- ── FOOTER ──────────────────────────────────────── -->
   <footer class="bg-neutral-800 text-neutral-300 mt-16">
     <div class="border-t border-neutral-700 text-center py-4 text-xs text-neutral-500">
       © 2026 ShopVue. All rights reserved.
