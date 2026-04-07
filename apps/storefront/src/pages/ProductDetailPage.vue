@@ -10,6 +10,7 @@ import {
   SfIconFavorite,
   SfIconArrowBack,
   SfIconPerson,
+  SfIconLocalShipping
 } from '@storefront-ui/vue'
 import CartDrawer from '../components/CartDrawer.vue'
 import { useCart } from '../modules/cart/useCart'
@@ -34,7 +35,6 @@ const error = ref('')
 const product = ref<ApiProduct | null>(null)
 const quantity = ref(1)
 
-// Convert cents to dollars — same formula as HomePage
 const price = computed(() => {
   if (!product.value) return 0
   return +(product.value.priceCents / 100).toFixed(2)
@@ -45,9 +45,6 @@ const roundedRating = computed(() => {
   return Math.round(product.value.rating.stars)
 })
 
-// ─────────────────────────────────────────────
-// ACTIONS
-// ─────────────────────────────────────────────
 
 function handleAddToCart() {
   if (!product.value) return
@@ -66,9 +63,6 @@ function handleAddToCart() {
 function incrementQty() { quantity.value++ }
 function decrementQty() { if (quantity.value > 1) quantity.value-- }
 
-// ─────────────────────────────────────────────
-// LIFECYCLE HOOK
-// ─────────────────────────────────────────────
 
 onMounted(async () => {
   try {
@@ -97,7 +91,6 @@ onMounted(async () => {
 <template>
   <CartDrawer />
 
-  <!-- ── NAVBAR ──────────────────────────────────────── -->
   <header class="sticky top-0 z-10 bg-white shadow-sm">
     <div class="max-w-7xl mx-auto px-4 flex items-center gap-4 h-16">
       <a
@@ -130,9 +123,7 @@ onMounted(async () => {
     </div>
   </header>
 
-  <!-- ── MAIN CONTENT ───────────────────────────────── -->
   <main class="max-w-7xl mx-auto px-4 py-8">
-    <!-- Back button -->
     <SfButton
       variant="tertiary"
       class="mb-6"
@@ -144,7 +135,6 @@ onMounted(async () => {
       Back to products
     </SfButton>
 
-    <!-- Loading state -->
     <div
       v-if="loading"
       class="flex justify-center py-32"
@@ -152,7 +142,6 @@ onMounted(async () => {
       <SfLoaderCircular size="lg" />
     </div>
 
-    <!-- Error state -->
     <p
       v-else-if="error"
       class="text-center text-red-500 py-32 text-lg"
@@ -160,12 +149,10 @@ onMounted(async () => {
       {{ error }}
     </p>
 
-    <!-- Product detail -->
     <div
       v-else-if="product"
       class="grid grid-cols-1 lg:grid-cols-2 gap-10"
     >
-      <!-- ── LEFT: IMAGE PANEL ─────────────────────── -->
       <div>
         <div class="relative bg-neutral-100 rounded-2xl overflow-hidden aspect-square mb-3">
           <img
@@ -174,7 +161,6 @@ onMounted(async () => {
             class="w-full h-full object-contain p-6"
           >
 
-          <!-- Wishlist button -->
           <SfButton
             variant="tertiary"
             square
@@ -184,7 +170,6 @@ onMounted(async () => {
           </SfButton>
         </div>
 
-        <!-- Thumbnail -->
         <div class="flex gap-2">
           <div class="w-16 h-16 rounded-lg overflow-hidden border-2 border-primary-700">
             <img
@@ -196,9 +181,7 @@ onMounted(async () => {
         </div>
       </div>
 
-      <!-- ── RIGHT: PRODUCT INFO ───────────────────── -->
       <div class="flex flex-col gap-4">
-        <!-- Category & subcategory -->
         <div class="flex items-center gap-2 text-sm text-neutral-500">
           <span>{{ product.category }}</span>
           <template v-if="product.subCategory">
@@ -207,12 +190,10 @@ onMounted(async () => {
           </template>
         </div>
 
-        <!-- Product name -->
         <h1 class="text-2xl md:text-3xl font-bold text-neutral-900 leading-tight">
           {{ product.name }}
         </h1>
 
-        <!-- Rating row -->
         <div class="flex items-center gap-2">
           <SfRating
             :value="roundedRating"
@@ -223,12 +204,10 @@ onMounted(async () => {
           <span class="text-sm text-neutral-500">({{ product.rating.count }} review{{ product.rating.count !== 1 ? 's' : '' }})</span>
         </div>
 
-        <!-- Price -->
         <div class="bg-neutral-50 rounded-xl p-4">
           <span class="text-3xl font-bold text-neutral-900">${{ price.toFixed(2) }}</span>
         </div>
 
-        <!-- Description -->
         <div>
           <h2 class="text-sm font-semibold text-neutral-700 uppercase tracking-wide mb-1">
             Description
@@ -285,7 +264,7 @@ onMounted(async () => {
 
         <!-- Delivery note -->
         <p class="text-xs text-neutral-500 flex items-center gap-1">
-          <span>🚚</span>
+          <SfIconLocalShipping />
           Free shipping on orders over $50
         </p>
       </div>
