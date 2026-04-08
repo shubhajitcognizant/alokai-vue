@@ -18,7 +18,7 @@ const STORAGE_KEY = 'shopvue_user'
 
 function loadUserFromStorage(): AuthUser | null {
     try {
-        const raw = localStorage.getItem(STORAGE_KEY)
+        const raw = localStorage.getItem(STORAGE_KEY) ?? sessionStorage.getItem(STORAGE_KEY)
         return raw ? (JSON.parse(raw) as AuthUser) : null
     } catch {
         return null
@@ -71,6 +71,8 @@ async function login(email: string, password: string): Promise<boolean> {
 function logout() {
     currentUser.value = null
     localStorage.removeItem(STORAGE_KEY)
+    sessionStorage.removeItem(STORAGE_KEY)
+    sessionStorage.removeItem('shopvue_cart')
 }
 
 function loginAsGuest() {
@@ -80,6 +82,7 @@ function loginAsGuest() {
         email: '',
         isGuest: true
     }
+    sessionStorage.setItem(STORAGE_KEY, JSON.stringify(currentUser.value))
 }
 
 const isLoggedIn = computed(() => currentUser.value !== null)

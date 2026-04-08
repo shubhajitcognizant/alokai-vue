@@ -42,7 +42,7 @@ const carouselConfig = {
   wrapAround: true
 }
 
-const { isOpen, addItem, count: cartCount, loadCart } = useCart()
+const { isOpen, addItem, count: cartCount } = useCart()
 const router = useRouter()
 const { isLoggedIn, currentUser, logout } = useAuth()
 
@@ -88,13 +88,6 @@ onMounted(async () => {
     const res = await fetch('https://kolzsticks.github.io/Free-Ecommerce-Products-Api/main/products.json')
     if (!res.ok) throw new Error(`HTTP ${res.status}`)
     rawProducts.value = await res.json()
-    await loadCart(rawProducts.value.map(p => ({
-      product_id: Number(p.id),
-      name: p.name,
-      price: +(p.priceCents / 100).toFixed(2),
-      discount: 0,
-      image: p.image,
-    })))
   } catch {
     error.value = 'Failed to load products. Please try again later.'
   } finally {

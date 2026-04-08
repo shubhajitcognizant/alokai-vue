@@ -21,7 +21,7 @@
  *   unwraps it automatically so you just write `items` instead of `items.value`.
  */
 
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 
 // ─────────────────────────────────────────────
 // TYPE DEFINITION
@@ -44,13 +44,22 @@ export interface CartItem {
 // ─────────────────────────────────────────────
 // STATE (defined outside the function = shared / singleton)
 // ─────────────────────────────────────────────
+const CART_KEY = 'shopvue_cart'
 
+function loadCartFromStorage(): CartItem[] {
+  try {
+    const raw = sessionStorage.getItem(CART_KEY)
+    return raw ? (JSON.parse(raw) as CartItem[]) : []
+  } catch {
+    return []
+  }
+}
 /**
  * `ref<CartItem[]>([])` — a reactive array of cart items.
  * The generic <CartItem[]> tells TypeScript what type of data this ref holds.
  * Starting value is an empty array [].
  */
-const items = ref<CartItem[]>([])
+const items = ref<CartItem[]>(loadCartFromStorage())
 
 /**
  * Controls whether the cart drawer (sidebar) is visible or hidden.
@@ -58,6 +67,9 @@ const items = ref<CartItem[]>([])
  */
 const isOpen = ref(false)
 
+watch(items, (val) => {
+  sessionStorage.setItem(CART_KEY, JSON.stringify(val))
+}, {deep: true})
 // ─────────────────────────────────────────────
 // ACTIONS (functions that modify state)
 // ─────────────────────────────────────────────
