@@ -22,9 +22,13 @@ const router = createRouter({
   ],
 })
 router.beforeEach((to) => {
-  const { isLoggedIn } = useAuth()
+  const { isLoggedIn, isGuest } = useAuth()
   if (to.meta.requiresAuth && !isLoggedIn.value) {
     return { path: '/login' }
+  }
+  // Guest users cannot access the user profile page
+  if (to.path === '/user' && isGuest.value) {
+    return { path: '/' }
   }
 })
 

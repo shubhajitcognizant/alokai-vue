@@ -4,7 +4,7 @@ import { useRouter } from 'vue-router'
 import { SfButton, SfInput, SfIconPerson, SfLoaderCircular } from '@storefront-ui/vue'
 import { useAuth } from '../modules/auth/useAuth'
 
-const { loginError, loginLoading, login } = useAuth()
+const { loginError, loginLoading, login, loginAsGuest } = useAuth()
 
 onMounted(() => {
   loginError.value = ''
@@ -18,6 +18,11 @@ const password = ref('')
 async function handleSubmit() {
   const success = await login(email.value, password.value)
   if (success) router.push('/')
+}
+
+function handleGuestCheckout() {
+  loginAsGuest()
+  router.push('/')
 }
 </script>
 
@@ -85,6 +90,38 @@ async function handleSubmit() {
           Back to Shop
         </SfButton>
       </form>
+
+      <!-- Divider -->
+      <div class="flex item-center gap-3 my-6">
+        <hr class="flex-1 border-neutral-200">
+        <span class="text-sm text-neutral-400 font-medium">OR</span>
+        <hr class="flex-1 border-neutral-200">
+      </div>
+
+      <!-- Guest Checkout Section -->
+      <div class="rounded-xl border border-neutral-200 bg-neutral-50 p-5">
+        <div class="flex items-start gap-3 mb-4">
+          <div class="flex-shrink-0 w-9 h-9 rounded-full bg-neutral-200 flex items-center justify-center">
+            <SfIconPerson class="text-neutral-600" />
+          </div>
+          <div>
+            <p class="font-semibold text-neutral-800 text-sm">
+              Continue as Guest
+            </p>
+            <p class="text-xs text-neutral-500 mt-0.5">
+              Shop without an account. Your session won't be saved after you leave.
+            </p>
+          </div>
+        </div>
+        <SfButton
+          variant="secondary"
+          class="w-full"
+          size="lg"
+          @click="handleGuestCheckout"
+        >
+          Guest Checkout
+        </SfButton>
+      </div>
     </div>
   </div>
 </template>

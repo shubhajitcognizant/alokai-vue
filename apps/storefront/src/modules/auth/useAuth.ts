@@ -11,6 +11,7 @@ export interface AuthUser {
     user_id: number
     username: string
     email: string
+    isGuest?: boolean
 }
 
 const STORAGE_KEY = 'shopvue_user'
@@ -72,7 +73,17 @@ function logout() {
     localStorage.removeItem(STORAGE_KEY)
 }
 
+function loginAsGuest() {
+    currentUser.value = {
+        user_id: 0,
+        username:'Guest',
+        email: '',
+        isGuest: true
+    }
+}
+
 const isLoggedIn = computed(() => currentUser.value !== null)
+const isGuest = computed(() => currentUser.value?.isGuest === true)
 
 export function useAuth() {
     return {
@@ -81,7 +92,9 @@ export function useAuth() {
         loginError,
         loginLoading,
         isLoggedIn,
+        isGuest,
         login,
-        logout
+        logout,
+        loginAsGuest
     }
 }
