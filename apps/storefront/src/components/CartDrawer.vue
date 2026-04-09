@@ -125,7 +125,7 @@ function handleCheckout() {
       </p>
       <SfButton
         variant="secondary"
-        @click="isOpen = false"
+        @click="() => { isOpen = false; router.push('/') }"
       >
         Continue Shopping
       </SfButton>
