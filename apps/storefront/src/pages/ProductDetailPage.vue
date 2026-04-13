@@ -14,6 +14,7 @@ import {
 } from '@storefront-ui/vue'
 import CartDrawer from '../components/CartDrawer.vue'
 import { useCart } from '../modules/cart/useCart'
+import AddToCartButton from '../components/AddToCartButton.vue'
 
 interface ApiProduct {
   id: string
@@ -29,7 +30,7 @@ interface ApiProduct {
 
 const route = useRoute()
 const router = useRouter()
-const { isOpen, addItem, count: cartCount } = useCart()
+const { isOpen, count: cartCount } = useCart()
 const loading = ref(true)
 const error = ref('')
 const product = ref<ApiProduct | null>(null)
@@ -44,21 +45,6 @@ const roundedRating = computed(() => {
   if (!product.value) return 0
   return Math.round(product.value.rating.stars)
 })
-
-
-function handleAddToCart() {
-  if (!product.value) return
-  for (let i = 0; i < quantity.value; i++) {
-    addItem({
-      product_id: Number(product.value.id),
-      name: product.value.name,
-      price: price.value,
-      originalPrice: null,
-      image: product.value.image,
-    })
-  }
-  isOpen.value = true
-}
 
 function incrementQty() { quantity.value++ }
 function decrementQty() { if (quantity.value > 1) quantity.value-- }
@@ -248,16 +234,17 @@ onMounted(async () => {
             </button>
           </div>
 
-          <SfButton
+          <AddToCartButton 
+            :product="{
+              product_id: Number(product?.id),
+              name: product?.name ?? '',
+              price: price,
+              originalPrice: null,
+              image: product?.image ?? ''
+            }"
+            :quantity="quantity"
             size="lg"
-            class="flex-1"
-            @click="handleAddToCart"
-          >
-            <template #prefix>
-              <SfIconShoppingCart />
-            </template>
-            Add to cart
-          </SfButton>
+          />
         </div>
 
         <p class="text-xs text-neutral-500 flex items-center gap-1">
