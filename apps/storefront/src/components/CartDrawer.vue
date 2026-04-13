@@ -83,7 +83,7 @@ function handleCheckout() {
   <SfDrawer
     v-model="isOpen"
     placement="right"
-    class="w-full max-w-md bg-white flex flex-col"
+    class="w-full max-w-md bg-white flex flex-col z-50"
   >
     <!-- ── HEADER ─────────────────────────────────── -->
     <div class="flex items-center justify-between px-4 py-4 border-b border-neutral-200">

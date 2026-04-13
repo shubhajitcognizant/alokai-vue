@@ -24,6 +24,8 @@ import { useRouter } from 'vue-router'
 import { useAuth } from '../modules/auth/useAuth'
 import 'vue3-carousel/carousel.css'
 import { Carousel, Slide, Pagination, Navigation } from 'vue3-carousel'
+import AddToCartButton from '../components/AddToCartButton.vue'
+
 
 interface ApiProduct {
   id: string
@@ -42,7 +44,7 @@ const carouselConfig = {
   wrapAround: true
 }
 
-const { isOpen, addItem, count: cartCount } = useCart()
+const { isOpen, count: cartCount } = useCart()
 const router = useRouter()
 const { isLoggedIn, currentUser, logout } = useAuth()
 
@@ -71,17 +73,6 @@ const products = computed(() => {
       badge: null,
     }))
 })
-
-function handleAddToCart(product: (typeof products.value)[0]) {
-  addItem({
-    product_id: product.product_id,
-    name: product.name,
-    price: product.price,
-    originalPrice: product.originalPrice,
-    image: product.image,
-  })
-  isOpen.value = true
-}
 
 onMounted(async () => {
   try {
@@ -455,16 +446,10 @@ onMounted(async () => {
           <div class="flex items-center gap-2 mb-3">
             <span class="font-bold text-neutral-900">${{ product.price.toFixed(2) }}</span>
           </div>
-          <SfButton
+          <AddToCartButton
+            :product="{...product, product_id: product.product_id}"
             size="sm"
-            class="w-full"
-            @click="handleAddToCart(product)"
-          >
-            <template #prefix>
-              <SfIconShoppingCart size="sm" />
-            </template>
-            Add to cart
-          </SfButton>
+          />
         </div>
       </div>
     </div>
