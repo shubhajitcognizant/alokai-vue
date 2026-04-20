@@ -17,6 +17,7 @@
 import express from 'express'
 import { productsRouter } from './api/products.js'
 import { cartRouter } from './api/cart.js'
+import { paymentRouter } from './api/payment.js'
 
 const app = express()
 const PORT = 3000
@@ -26,6 +27,7 @@ app.use(express.json())
 // All API routes are mounted under /api
 app.use('/api', productsRouter)
 app.use('/api', cartRouter)
+app.use('/api', paymentRouter)
 
 app.listen(PORT, () => {
   console.log(`Middleware running at http://localhost:${PORT}`)

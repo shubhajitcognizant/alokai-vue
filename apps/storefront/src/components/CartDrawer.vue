@@ -61,7 +61,7 @@ const total = () => +(subtotal.value).toFixed(2)
 function handleCheckout() {
   isOpen.value = false
   if (isLoggedIn.value) {
-    router.push('')
+    router.push('/checkout')
   } else {
     router.push('/login')
   }

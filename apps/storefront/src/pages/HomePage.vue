@@ -149,6 +149,20 @@ onMounted(async () => {
             </div>
             <SfButton
               variant="tertiary"
+              class="w-full !justify-start"
+              @click="router.push('/user')"
+            >
+              My Profile
+            </SfButton>
+            <SfButton
+              variant="tertiary"
+              class="w-full !justify-start"
+              @click="router.push('/orders')"
+            >
+              Order History
+            </SfButton>
+            <SfButton
+              variant="tertiary"
               class="w-full !justify-start !text-red-500 hover:!bg-red-50"
               @click="logout"
             >
