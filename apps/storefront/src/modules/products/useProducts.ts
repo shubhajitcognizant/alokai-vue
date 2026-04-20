@@ -26,15 +26,15 @@ async function loadProducts() {
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const data = await res.json();
     console.log(data, "res");
-    products.value = data.map((p: any) => ({
-      product_id: Number(p.id ?? p.product_id),
-      name: p.name,
-      price: +((p.priceCents ?? p.price) / 100).toFixed(2),
-      image: p.image,
-      category: p.category,
-      description: p.description,
-      rating: p.rating?.stars ?? 0,
-      reviewCount: p.rating?.count ?? 0,
+    products.value = (data as Record<string, unknown>[]).map((p) => ({
+      product_id: Number((p.id ?? p.product_id) as number),
+      name: p.name as string,
+      price: +((((p.priceCents ?? p.price) as number)) / 100).toFixed(2),
+      image: p.image as string,
+      category: p.category as string,
+      description: p.description as string,
+      rating: (p.rating as { stars?: number } | undefined)?.stars ?? 0,
+      reviewCount: (p.rating as { count?: number } | undefined)?.count ?? 0,
     }));
   } catch (e) {
     error.value = e instanceof Error ? e.message : "Failed to load products";
