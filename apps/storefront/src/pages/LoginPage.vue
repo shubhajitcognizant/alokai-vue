@@ -89,6 +89,16 @@ function handleGuestCheckout() {
         >
           Back to Shop
         </SfButton>
+
+        <p class="text-center text-sm text-neutral-500">
+          Don't have an account?
+          <a
+            class="text-primary-700 font-medium hover:underline cursor-pointer"
+            @click="router.push('/signup')"
+          >
+            Sign up
+          </a>
+        </p>
       </form>
 
       <!-- Divider -->

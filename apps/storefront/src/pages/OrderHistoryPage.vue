@@ -1,39 +1,25 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
+import { doc, getDoc } from 'firebase/firestore'
 import { useAuth } from '../modules/auth/useAuth'
+import { db } from '../firebase/config'
 import { SfIconPackage } from '@storefront-ui/vue'
+import type { CartItem } from '../modules/cart/useCart'
 
-interface OrderItem {
-  product_id: number
-  quantity: number
-  name?: string
-  price?: number
-  image?: string
-}
-
-interface Product {
-  product_id: number
-  name: string
-  price: number
-  image: string
-}
 const { currentUser } = useAuth()
-const order = ref<OrderItem[]>([])
+const order = ref<CartItem[]>([])
 
 onMounted(async () => {
-  if (!currentUser.value) return
-  const cartRes = await fetch(`https://fake-store-api.mock.beeceptor.com/api/carts/${currentUser.value.user_id}`)
-  const cartData = await cartRes.json()
-  const cart = Array.isArray(cartData) ? cartData[0] : cartData
-  if (!cart?.items) return
+  if (!currentUser.value || currentUser.value.isGuest) return
 
-  const productRes = await fetch('https://fake-store-api.mock.beeceptor.com/api/products')
-  const products = await productRes.json()
-
-  order.value = cart.items.map((item: OrderItem) => {
-    const product = products.find((p: Product) => p.product_id === item.product_id)
-    return { ...item, name: product?.name, price: product?.price, image: product?.image }
-  })
+  try {
+    const cartDoc = await getDoc(doc(db, 'carts', currentUser.value.user_id))
+    if (cartDoc.exists()) {
+      order.value = (cartDoc.data().items ?? []) as CartItem[]
+    }
+  } catch {
+    order.value = []
+  }
 })
 </script>
 
