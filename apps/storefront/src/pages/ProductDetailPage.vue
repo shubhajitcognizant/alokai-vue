@@ -10,7 +10,8 @@ import {
   SfIconFavorite,
   SfIconArrowBack,
   SfIconPerson,
-  SfIconLocalShipping
+  SfIconLocalShipping,
+  SfIconDelete
 } from '@storefront-ui/vue'
 import CartDrawer from '../components/CartDrawer.vue'
 import { useCart } from '../modules/cart/useCart'
@@ -30,11 +31,14 @@ interface ApiProduct {
 
 const route = useRoute()
 const router = useRouter()
-const { isOpen, count: cartCount } = useCart()
+const { isOpen, items: cartItems, removeItem, count: cartCount } = useCart()
 const loading = ref(true)
 const error = ref('')
 const product = ref<ApiProduct | null>(null)
 const quantity = ref(1)
+const isInCart = computed(() =>
+  !!cartItems.value.find(i => i.product_id === Number(product.value?.id))
+)
 
 const price = computed(() => {
   if (!product.value) return 0
@@ -217,7 +221,10 @@ onMounted(async () => {
         </div>
 
         <div class="flex items-center gap-3 mt-2">
-          <div class="flex items-center border border-neutral-300 rounded-lg overflow-hidden">
+          <div
+            v-if="!isInCart"
+            class="flex items-center border border-neutral-300 rounded-lg overflow-hidden"
+          >
             <button
               class="w-10 h-10 flex items-center justify-center text-neutral-600 hover:bg-neutral-100 transition-colors disabled:opacity-40"
               :disabled="quantity <= 1"
@@ -233,6 +240,18 @@ onMounted(async () => {
               +
             </button>
           </div>
+
+          <SfButton
+            v-else
+            variant="tertiary"
+            size="lg"
+            class="!border !border-red-300 !text-red-500 hover: !bg-red-50"
+            @click="removeItem(Number(product?.id))"
+          >
+            <template #prefix>
+              <SfIconDelete />
+            </template>
+          </SfButton>
 
           <AddToCartButton 
             :product="{
