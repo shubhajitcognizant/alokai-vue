@@ -28,5 +28,9 @@ export default defineConfig({
     fs: {
       allow: [__dirname],
     },
+    // Proxy /api calls to the Express middleware running on port 3000
+    proxy: {
+      '/api': 'http://localhost:3000',
+    },
   },
 })
