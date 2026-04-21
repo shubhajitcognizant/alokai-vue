@@ -76,54 +76,51 @@ onMounted(async () => {
       v-for="slide in 10"
       :key="slide"
     >
-      <div class="carousel__item">
-        {{ slide }}
-      </div>
+      <!-- START OF HERO BANNER -->
+      <section class="w-full bg-primary-700 text-white">
+        <div class="max-w-7xl mx-auto px-4 py-16 md:py-24 flex flex-col md:flex-row items-center gap-8">
+          <div class="flex-1 text-center md:text-left">
+            <p class="text-primary-200 text-sm font-medium uppercase tracking-widest mb-3">
+              New Season Arrivals
+            </p>
+            <h1 class="text-4xl md:text-5xl font-bold leading-tight mb-4">
+              Discover the <br>Latest Trends
+            </h1>
+            <p class="text-primary-100 text-lg mb-8">
+              Shop thousands of products at unbeatable prices. Free shipping on orders over $50.
+            </p>
+            <div class="flex gap-3 justify-center md:justify-start">
+              <SfButton
+                size="lg"
+                class="!bg-white !text-primary-700 hover:!bg-primary-50"
+              >
+                Shop Now
+              </SfButton>
+              <SfButton
+                size="lg"
+                variant="secondary"
+                class="!border-white !text-white hover:!bg-primary-600"
+              >
+                Learn More
+              </SfButton>
+            </div>
+          </div>
+          <div class="flex-1 flex justify-center">
+            <img
+              src="https://placehold.co/480x320?text=Hero+Banner"
+              alt="Hero Banner"
+              class="rounded-2xl shadow-xl max-w-sm w-full"
+            >
+          </div>
+        </div>
+      </section>
+      <!-- END OF HERO BANNER -->
     </Slide>
     <template #addons>
       <Navigation />
       <Pagination />
     </template>
   </Carousel>
-
-  <!-- HERO BANNER -->
-  <section class="bg-primary-700 text-white">
-    <div class="max-w-7xl mx-auto px-4 py-16 md:py-24 flex flex-col md:flex-row items-center gap-8">
-      <div class="flex-1 text-center md:text-left">
-        <p class="text-primary-200 text-sm font-medium uppercase tracking-widest mb-3">
-          New Season Arrivals
-        </p>
-        <h1 class="text-4xl md:text-5xl font-bold leading-tight mb-4">
-          Discover the <br>Latest Trends
-        </h1>
-        <p class="text-primary-100 text-lg mb-8">
-          Shop thousands of products at unbeatable prices. Free shipping on orders over $50.
-        </p>
-        <div class="flex gap-3 justify-center md:justify-start">
-          <SfButton
-            size="lg"
-            class="!bg-white !text-primary-700 hover:!bg-primary-50"
-          >
-            Shop Now
-          </SfButton>
-          <SfButton
-            size="lg"
-            variant="secondary"
-            class="!border-white !text-white hover:!bg-primary-600"
-          >
-            Learn More
-          </SfButton>
-        </div>
-      </div>
-      <div class="flex-1 flex justify-center">
-        <img
-          src="https://placehold.co/480x320?text=Hero+Banner"
-          alt="Hero Banner"
-          class="rounded-2xl shadow-xl max-w-sm w-full"
-        >
-      </div>
-    </div>
-  </section>
 
   <!-- HOT ON SALES SLIDER -->
   <section class="max-w-7xl mx-auto px-4 py-8 border-b border-neutral-200 [overflow-x:clip]">
@@ -180,7 +177,7 @@ onMounted(async () => {
                 <img
                   :src="product.image"
                   :alt="product.name"
-                  class="w-full aspect-square object-cover rounded-t-md"
+                  class="w-full aspect-square object-contain p-4 rounded-t-md"
                   @error="($event.target as HTMLImageElement).src = `https://placehold.co/192x192?text=${encodeURIComponent(product.name.split(' ')[0])}`"
                 >
               </RouterLink>
@@ -273,7 +270,7 @@ onMounted(async () => {
             <img
               :src="product.image"
               :alt="product.name"
-              class="w-full aspect-square object-cover"
+              class="w-full aspect-square object-contain p-4"
             >
             <span
               v-if="product.badge"

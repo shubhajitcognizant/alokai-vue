@@ -246,39 +246,6 @@ function handleNewsletter() {
               />
             </svg>
           </div>
-          <!-- PayPal -->
-          <div class="bg-white rounded-xl px-4 py-2 flex items-center justify-center h-10 min-w-[72px]">
-            <span
-              class="font-bold text-base"
-              style="font-family:Arial,sans-serif"
-            ><span style="color:#003087">Pay</span><span style="color:#009cde">Pal</span></span>
-          </div>
-          <!-- Apple Pay -->
-          <div class="bg-white rounded-xl px-4 py-2 flex items-center justify-center h-10 gap-1 min-w-[72px]">
-            <svg
-              width="16"
-              height="18"
-              viewBox="0 0 14 17"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                d="M7.07 2.8C7.5 2.27 8.1 1.92 8.72 1.87c.08.68-.2 1.37-.62 1.86-.42.5-1.01.86-1.63.8-.09-.67.2-1.34.6-1.73zM10.5 7.5c.02 1.97 1.73 2.63 1.75 2.64-.01.05-.27.94-.9 1.86-.54.8-1.1 1.59-1.98 1.6-.86.02-1.14-.51-2.12-.51-.98 0-1.3.5-2.11.53-.86.03-1.51-.85-2.06-1.64C1.88 9.84 1.28 7.36 2.2 5.68c.45-.83 1.27-1.36 2.15-1.37.85-.02 1.64.57 2.16.57.52 0 1.49-.7 2.52-.6.43.02 1.63.17 2.4 1.31-.06.04-1.44.84-1.43 2.51z"
-                fill="#000"
-              />
-            </svg>
-            <span
-              class="font-semibold text-sm text-neutral-900"
-              style="font-family:-apple-system,sans-serif"
-            >Pay</span>
-          </div>
-          <!-- Google Pay -->
-          <div class="bg-white rounded-xl px-4 py-2 flex items-center justify-center h-10 gap-1 min-w-[72px]">
-            <span
-              class="font-bold text-base"
-              style="font-family:Arial,sans-serif"
-            ><span style="color:#4285F4">G</span><span style="color:#34A853">o</span><span style="color:#FBBC05">o</span><span style="color:#EA4335">g</span><span style="color:#4285F4">le</span> <span style="color:#555">Pay</span></span>
-          </div>
         </div>
       </div>
     </div>
