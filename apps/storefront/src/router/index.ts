@@ -7,7 +7,8 @@ import OrderHistoryPage from '../pages/OrderHistoryPage.vue'
 import ProductDetailPage from '../pages/ProductDetailPage.vue'
 import CheckoutPage from '../pages/CheckoutPage.vue'
 import OrderSuccessPage from '../pages/OrderSuccessPage.vue'
-import { useAuth } from '../modules/auth/useAuth'
+import { useAuth, authReady } from '../modules/auth/useAuth'
+import SidePanelPage from '../pages/SidePanelPage.vue'
 
 const router = createRouter({
   history: createWebHistory(),
@@ -20,14 +21,15 @@ const router = createRouter({
     { path: '/orders', component: OrderHistoryPage, meta: { requiresAuth: true } },
     { path: '/checkout', component: CheckoutPage, meta: { requiresAuth: true } },
     { path: '/order-success', component: OrderSuccessPage, meta: { requiresAuth: true } },
+    { path: '/account', component: SidePanelPage, meta: { requiresAuth: true } },
   ],
 })
-router.beforeEach((to) => {
+router.beforeEach(async (to) => {
+  await authReady
   const { isLoggedIn, isGuest } = useAuth()
   if (to.meta.requiresAuth && !isLoggedIn.value) {
     return { path: '/login' }
   }
-  // Guest users cannot access the user profile page
   if (to.path === '/user' && isGuest.value) {
     return { path: '/' }
   }

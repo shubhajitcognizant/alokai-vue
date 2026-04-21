@@ -3,17 +3,13 @@ import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import {
   SfButton,
-  SfBadge,
   SfRating,
   SfLoaderCircular,
-  SfIconShoppingCart,
   SfIconFavorite,
   SfIconArrowBack,
-  SfIconPerson,
   SfIconLocalShipping,
   SfIconDelete
 } from '@storefront-ui/vue'
-import CartDrawer from '../components/CartDrawer.vue'
 import { useCart } from '../modules/cart/useCart'
 import AddToCartButton from '../components/AddToCartButton.vue'
 
@@ -31,7 +27,7 @@ interface ApiProduct {
 
 const route = useRoute()
 const router = useRouter()
-const { isOpen, items: cartItems, removeItem, count: cartCount } = useCart()
+const { items: cartItems, removeItem } = useCart()
 const loading = ref(true)
 const error = ref('')
 const product = ref<ApiProduct | null>(null)
@@ -79,40 +75,6 @@ onMounted(async () => {
 </script>
 
 <template>
-  <CartDrawer />
-
-  <header class="sticky top-0 z-10 bg-white shadow-sm">
-    <div class="max-w-7xl mx-auto px-4 flex items-center gap-4 h-16">
-      <a
-        href="/"
-        class="text-xl font-bold text-primary-700 shrink-0"
-      >ShopVue</a>
-
-      <div class="flex items-center gap-2 ml-auto">
-        <SfButton
-          variant="tertiary"
-          square
-        >
-          <SfIconPerson />
-        </SfButton>
-
-        <SfButton
-          variant="tertiary"
-          square
-          class="relative"
-          @click="isOpen = true"
-        >
-          <SfIconShoppingCart />
-          <SfBadge
-            v-if="cartCount > 0"
-            :content="cartCount"
-            class="!bg-primary-700 outline outline-white outline-2 absolute -top-1 -right-1"
-          />
-        </SfButton>
-      </div>
-    </div>
-  </header>
-
   <main class="max-w-7xl mx-auto px-4 py-8">
     <SfButton
       variant="tertiary"
