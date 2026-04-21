@@ -1,17 +1,9 @@
 <script setup lang="ts">
-import { useRouter, useRoute } from 'vue-router';
-import { useAuth } from '../modules/auth/useAuth'
+import { useRoute } from 'vue-router';
 import { ref, computed, onMounted, watch } from 'vue'
-import { useCart } from '../modules/cart/useCart';
 import { useProducts } from '../modules/products/useProducts';
 import {
   SfButton,
-  SfBadge,
-  SfInput,
-  SfIconShoppingCart,
-  SfIconSearch,
-  SfIconMenu,
-  SfIconPerson,
   SfIconChevronLeft,
   SfIconChevronRight,
   SfSelect,
@@ -20,11 +12,7 @@ import {
 import FilterSlidePanel from '../components/FilterSlidepanel.vue';
 import AddToCartButton from '../components/AddToCartButton.vue';
 
-const { isLoggedIn, currentUser, logout } = useAuth()
-const router = useRouter()
 const route = useRoute()
-const searchQuery = ref('')
-const { isOpen, count: cartCount } = useCart()
 const { products, loading, error, loadProducts } = useProducts()
 
 onMounted(() => {
@@ -88,119 +76,7 @@ watch(displayProducts, () => { currentPage.value = 1; });
 
 </script>
 
-<template>  
-  <CartDrawer />
-  <header class="sticky top-0 z-10 bg-white shadow-sm">
-    <div class="max-w-7xl mx-auto px-4 flex items-center gap-4 h-16">
-      <SfButton
-        variant="tertiary"
-        square
-        class="md:hidden"
-      >
-        <SfIconMenu />
-      </SfButton>
-
-      <a
-        href="/"
-        class="text-xl font-bold text-primary-700 shrink-0"
-      >ShopVue</a>
-
-      <div class="flex-1 hidden md:block max-w-xl">
-        <SfInput
-          v-model="searchQuery"
-          placeholder="Search products..."
-          class="w-full"
-        >
-          <template #prefix>
-            <SfIconSearch class="text-neutral-500" />
-          </template>
-        </SfInput>
-      </div>
-
-      <div class="flex items-center gap-2 ml-auto">
-        <SfButton
-          variant="tertiary"
-          square
-        >
-          <SfIconSearch class="md:hidden" />
-        </SfButton>
-
-        <div
-          v-if="isLoggedIn"
-          class="relative group"
-        >
-          <SfButton
-            variant="tertiary"
-            square
-          >
-            <SfIconPerson class="text-primary-700" />
-          </SfButton>
-
-          <!-- User dropdown -->
-          <div class="absolute right-0 top-full mt-1 w-48 bg-white rounded-xl shadow-lg border border-neutral-100 overflow-hidden opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-20">
-            <div class="px-4 py-3 border-b border-neutral-100">
-              <p class="text-xs text-neutral-400">
-                Logged in as
-              </p>
-              <p class="text-sm font-semibold text-neutral-800 truncate">
-                {{ currentUser?.username }}
-              </p>
-            </div>
-            <SfButton
-              variant="tertiary"
-              class="w-full justify-start! text-red-500! hover:bg-red-50!"
-              @click="logout"
-            >
-              Logout
-            </SfButton>
-          </div>
-        </div>
-        <div
-          v-else
-          class="relative group"
-        >
-          <SfButton
-            variant="tertiary"
-            square
-          >
-            <SfIconPerson />
-          </SfButton>
-
-          <!-- Guest dropdown -->
-          <div class="absolute right-0 top-full mt-1 w-48 bg-white rounded-xl shadow-lg border border-neutral-100 overflow-hidden opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-20">
-            <SfButton
-              variant="tertiary"
-              class="w-full justify-start!"
-              @click="router.push('/login')"
-            >
-              Login
-            </SfButton>
-            <SfButton
-              variant="tertiary"
-              class="w-full justify-start!"
-              @click="router.push('/signup')"
-            >
-              Sign Up
-            </SfButton>
-          </div>
-        </div>
-
-        <SfButton
-          variant="tertiary"
-          square
-          class="relative"
-          @click="isOpen = true"
-        >
-          <SfIconShoppingCart />
-          <SfBadge
-            v-if="cartCount > 0"
-            :content="cartCount"
-            class="bg-primary-700! outline outline-white outline-2 absolute -top-1 -right-1"
-          />
-        </SfButton>
-      </div>
-    </div>
-  </header>
+<template>
   <section>
     <div class="flex flex-row  mx-auto px-5 py-8 gap-6">
       <div class="basis-1/3">

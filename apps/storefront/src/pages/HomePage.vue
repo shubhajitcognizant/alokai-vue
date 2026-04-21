@@ -3,25 +3,14 @@ import { ref, computed, onMounted } from 'vue'
 import { RouterLink } from 'vue-router'
 import {
   SfButton,
-  SfBadge,
-  SfInput,
   SfRating,
   SfChip,
   SfLoaderCircular,
-  SfIconShoppingCart,
   SfIconFavorite,
-  SfIconSearch,
-  SfIconMenu,
-  SfIconPerson,
   SfIconChevronLeft,
   SfIconChevronRight,
   SfScrollable,
-  SfIconClose
 } from '@storefront-ui/vue'
-import CartDrawer from '../components/CartDrawer.vue'
-import { useCart } from '../modules/cart/useCart'
-import { useRouter } from 'vue-router'
-import { useAuth } from '../modules/auth/useAuth'
 import 'vue3-carousel/carousel.css'
 import { Carousel, Slide, Pagination, Navigation } from 'vue3-carousel'
 import AddToCartButton from '../components/AddToCartButton.vue'
@@ -44,16 +33,10 @@ const carouselConfig = {
   wrapAround: true
 }
 
-const { isOpen, count: cartCount } = useCart()
-const router = useRouter()
-const { isLoggedIn, currentUser, logout } = useAuth()
-
-const searchQuery = ref('')
 const activeCategory = ref('All')
 const loading = ref(true)
 const error = ref('')
 const rawProducts = ref<ApiProduct[]>([])
-const mobileSearchOpen = ref(false)
 
 const categories = computed(() => {
   const unique = [...new Set(rawProducts.value.map((p) => p.category))]
@@ -74,24 +57,6 @@ const products = computed(() => {
       badge: null,
     }))
 })
-const searchResults = computed(() => {
-  const query = searchQuery.value.trim().toLowerCase()
-  if (!query) return []
-  return rawProducts.value
-    .filter((p) =>
-      p.name.toLowerCase().includes(query) ||
-      p.category.toLowerCase().includes(query)
-    )
-    .slice(0, 6)
-    .map((p) => ({
-      product_id: Number(p.id),
-      name: p.name,
-      price: +(p.priceCents / 100).toFixed(2),
-      image: p.image,
-      category: p.category,
-    }))
-})
-
 onMounted(async () => {
   try {
     const res = await fetch('https://kolzsticks.github.io/Free-Ecommerce-Products-Api/main/products.json')
@@ -596,96 +561,4 @@ onMounted(async () => {
       </SfButton>
     </div>
   </section>
-
-  <!-- FOOTER -->
-  <footer class="bg-neutral-800 text-neutral-300">
-    <div class="max-w-7xl mx-auto px-4 py-12 grid grid-cols-2 md:grid-cols-4 gap-8">
-      <div class="col-span-2 md:col-span-1">
-        <p class="text-white text-lg font-bold mb-2">
-          ShopVue
-        </p>
-        <p class="text-sm">
-          Your one-stop shop for everything you need, delivered fast.
-        </p>
-      </div>
-      <div>
-        <p class="text-white font-semibold mb-3">
-          Shop
-        </p>
-        <ul class="space-y-2 text-sm">
-          <li>
-            <a
-              href="#"
-              class="hover:text-white transition-colors"
-            >New Arrivals</a>
-          </li>
-          <li>
-            <a
-              href="#"
-              class="hover:text-white transition-colors"
-            >Best Sellers</a>
-          </li>
-          <li>
-            <a
-              href="#"
-              class="hover:text-white transition-colors"
-            >Sale</a>
-          </li>
-        </ul>
-      </div>
-      <div>
-        <p class="text-white font-semibold mb-3">
-          Support
-        </p>
-        <ul class="space-y-2 text-sm">
-          <li>
-            <a
-              href="#"
-              class="hover:text-white transition-colors"
-            >FAQ</a>
-          </li>
-          <li>
-            <a
-              href="#"
-              class="hover:text-white transition-colors"
-            >Shipping</a>
-          </li>
-          <li>
-            <a
-              href="#"
-              class="hover:text-white transition-colors"
-            >Returns</a>
-          </li>
-        </ul>
-      </div>
-      <div>
-        <p class="text-white font-semibold mb-3">
-          Company
-        </p>
-        <ul class="space-y-2 text-sm">
-          <li>
-            <a
-              href="#"
-              class="hover:text-white transition-colors"
-            >About Us</a>
-          </li>
-          <li>
-            <a
-              href="#"
-              class="hover:text-white transition-colors"
-            >Careers</a>
-          </li>
-          <li>
-            <a
-              href="#"
-              class="hover:text-white transition-colors"
-            >Contact</a>
-          </li>
-        </ul>
-      </div>
-    </div>
-    <div class="border-t border-neutral-700 text-center py-4 text-xs text-neutral-500">
-      © 2026 ShopVue. All rights reserved.
-    </div>
-  </footer>
 </template>
