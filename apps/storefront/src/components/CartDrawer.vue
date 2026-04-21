@@ -274,7 +274,6 @@ function handleCheckout() {
           <span>${{ total().toFixed(2) }}</span>
         </div>
 
-        <!-- Primary CTA button -->
         <SfButton
           class="w-full mt-2"
           size="lg"
@@ -283,7 +282,14 @@ function handleCheckout() {
           Proceed to Checkout
         </SfButton>
 
-        <!-- Secondary action -->
+        <SfButton
+          variant="secondary"
+          class="w-full"
+          @click="isOpen = false; router.push('/cart')"
+        >
+          View Cart
+        </SfButton>
+
         <SfButton
           variant="tertiary"
           class="w-full"

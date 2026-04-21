@@ -1,137 +1,237 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
-import { useRouter } from 'vue-router'
-import { loadStripe, type Stripe, type StripeCardElement } from '@stripe/stripe-js'
-import { collection, addDoc } from 'firebase/firestore'
-import { SfButton, SfLoaderCircular, SfIconChevronLeft } from '@storefront-ui/vue'
+import { ref, reactive, onMounted } from 'vue'
+import { useRouter, RouterLink } from 'vue-router'
+import { doc, getDoc, updateDoc } from 'firebase/firestore'
+import { SfButton, SfInput, SfIconChevronLeft, SfLoaderCircular } from '@storefront-ui/vue'
 import { useCart } from '../modules/cart/useCart'
 import { useAuth } from '../modules/auth/useAuth'
+import { useCheckout } from '../composables/useCheckout'
 import { db } from '../firebase/config'
 
 const router = useRouter()
 const { items, subtotal, savings } = useCart()
-const { currentUser } = useAuth()
+const { currentUser, isGuest } = useAuth()
+const { address } = useCheckout()
 
-const isProcessing = ref(false)
-const paymentError = ref('')
-
-// Stripe instances — set up after the component mounts
-let stripe: Stripe | null = null
-let cardElement: StripeCardElement | null = null
-
-const total = computed(() => +(subtotal.value).toFixed(2))
+const total = () => +(subtotal.value).toFixed(2)
+const saveAddress = ref(true)
+const loading = ref(true)
+const errors = reactive<Record<string, string>>({})
 
 onMounted(async () => {
-  // Redirect away if cart is empty
-  if (items.value.length === 0) {
-    router.replace('/')
-    return
+  if (items.value.length === 0) { router.replace('/cart'); return }
+
+  // Pre-fill from Firestore if registered user has a saved address
+  if (!isGuest.value && currentUser.value) {
+    try {
+      const snap = await getDoc(doc(db, 'users', currentUser.value.user_id))
+      const saved = snap.data()?.address
+      if (saved) {
+        address.fullName = saved.fullName ?? ''
+        address.line1    = saved.line1    ?? ''
+        address.line2    = saved.line2    ?? ''
+        address.city     = saved.city     ?? ''
+        address.state    = saved.state    ?? ''
+        address.zip      = saved.zip      ?? ''
+        address.country  = saved.country  ?? 'United States'
+      }
+    } catch { /* silent — form stays blank */ }
   }
-
-  stripe = await loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY as string)
-  if (!stripe) return
-
-  const elements = stripe.elements()
-  cardElement = elements.create('card', {
-    style: {
-      base: {
-        fontSize: '16px',
-        color: '#1a1a2e',
-        fontFamily: 'ui-sans-serif, system-ui, sans-serif',
-        '::placeholder': { color: '#a3a3a3' },
-      },
-      invalid: { color: '#ef4444' },
-    },
-  })
-  cardElement.mount('#stripe-card-element')
+  loading.value = false
 })
 
-onBeforeUnmount(() => {
-  cardElement?.destroy()
-})
-
-async function handlePay() {
-  if (!stripe || !cardElement || !currentUser.value) return
-
-  isProcessing.value = true
-  paymentError.value = ''
-
-  try {
-    // 1. Ask our middleware to create a Stripe PaymentIntent
-    const res = await fetch('/api/create-payment-intent', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ amount: Math.round(total.value * 100) }),
-    })
-    const { clientSecret, error: serverError } = await res.json()
-
-    if (serverError || !clientSecret) {
-      paymentError.value = serverError ?? 'Could not initiate payment.'
-      return
-    }
-
-    // 2. Confirm the payment on Stripe's side using the card element
-    const { error: stripeError, paymentIntent } = await stripe.confirmCardPayment(
-      clientSecret,
-      { payment_method: { card: cardElement } }
-    )
-
-    if (stripeError) {
-      paymentError.value = stripeError.message ?? 'Payment failed.'
-      return
-    }
-
-    if (paymentIntent?.status === 'succeeded') {
-      // 3. Save the order to Firestore under users/{uid}/orders
-      await addDoc(
-        collection(db, 'users', currentUser.value.user_id, 'orders'),
-        {
-          stripePaymentId: paymentIntent.id,
-          items: items.value.map((i) => ({
-            product_id: i.product_id,
-            name: i.name,
-            price: i.price,
-            originalPrice: i.originalPrice,
-            image: i.image,
-            quantity: i.quantity,
-          })),
-          total: total.value,
-          createdAt: new Date().toISOString(),
-          status: 'paid',
-        }
-      )
-
-      // 4. Clear cart and navigate to success
-      items.value = []
-      router.push('/order-success')
-    }
-  } catch {
-    paymentError.value = 'Something went wrong. Please try again.'
-  } finally {
-    isProcessing.value = false
+function validate(): boolean {
+  const required: (keyof typeof address)[] = ['fullName', 'line1', 'city', 'state', 'zip', 'country']
+  let ok = true
+  for (const key of required) {
+    if (!address[key].trim()) { errors[key] = 'Required'; ok = false }
+    else delete errors[key]
   }
+  return ok
+}
+
+async function continueToPayment() {
+  if (!validate()) return
+
+  // Save address to Firestore for future orders (registered users only)
+  if (!isGuest.value && currentUser.value && saveAddress.value) {
+    try {
+      await updateDoc(doc(db, 'users', currentUser.value.user_id), { address: { ...address } })
+    } catch { /* silent */ }
+  }
+
+  router.push('/checkout/payment')
 }
 </script>
 
 <template>
   <div class="min-h-screen bg-neutral-50 px-4 py-10">
-    <div class="max-w-2xl mx-auto">
-      <!-- Back link -->
-      <button
-        class="flex items-center gap-1 text-sm text-neutral-500 hover:text-primary-700 mb-6"
-        @click="router.back()"
+    <div class="max-w-5xl mx-auto">
+      <RouterLink
+        to="/cart"
+        class="inline-flex items-center gap-1 text-sm text-neutral-500 hover:text-primary-700 mb-6"
       >
         <SfIconChevronLeft size="sm" />
         Back to cart
-      </button>
+      </RouterLink>
 
       <h1 class="text-2xl font-bold text-neutral-900 mb-8">
         Checkout
       </h1>
 
-      <div class="grid grid-cols-1 gap-6">
-        <!-- ORDER SUMMARY -->
-        <div class="bg-white rounded-2xl shadow-sm border border-neutral-200 p-6">
+      <!-- Loading skeleton -->
+      <div
+        v-if="loading"
+        class="flex justify-center py-20"
+      >
+        <SfLoaderCircular size="lg" />
+      </div>
+
+      <div
+        v-else
+        class="flex flex-col lg:flex-row gap-6 items-start"
+      >
+        <!-- LEFT — DELIVERY ADDRESS -->
+        <div class="flex-1 bg-white rounded-2xl border border-neutral-200 shadow-sm p-6">
+          <h2 class="text-base font-semibold text-neutral-800 mb-5">
+            Delivery Address
+          </h2>
+
+          <div class="grid grid-cols-1 gap-4">
+            <div>
+              <label class="block text-xs font-medium text-neutral-600 mb-1">Full Name *</label>
+              <SfInput
+                v-model="address.fullName"
+                placeholder="Jane Smith"
+                :invalid="!!errors.fullName"
+                class="w-full"
+              />
+              <p
+                v-if="errors.fullName"
+                class="text-xs text-red-500 mt-1"
+              >
+                {{ errors.fullName }}
+              </p>
+            </div>
+
+            <div>
+              <label class="block text-xs font-medium text-neutral-600 mb-1">Address Line 1 *</label>
+              <SfInput
+                v-model="address.line1"
+                placeholder="123 Main Street"
+                :invalid="!!errors.line1"
+                class="w-full"
+              />
+              <p
+                v-if="errors.line1"
+                class="text-xs text-red-500 mt-1"
+              >
+                {{ errors.line1 }}
+              </p>
+            </div>
+
+            <div>
+              <label class="block text-xs font-medium text-neutral-600 mb-1">
+                Address Line 2 <span class="text-neutral-400">(optional)</span>
+              </label>
+              <SfInput
+                v-model="address.line2"
+                placeholder="Apt, suite, floor…"
+                class="w-full"
+              />
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <label class="block text-xs font-medium text-neutral-600 mb-1">City *</label>
+                <SfInput
+                  v-model="address.city"
+                  placeholder="New York"
+                  :invalid="!!errors.city"
+                  class="w-full"
+                />
+                <p
+                  v-if="errors.city"
+                  class="text-xs text-red-500 mt-1"
+                >
+                  {{ errors.city }}
+                </p>
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-neutral-600 mb-1">State / Province *</label>
+                <SfInput
+                  v-model="address.state"
+                  placeholder="NY"
+                  :invalid="!!errors.state"
+                  class="w-full"
+                />
+                <p
+                  v-if="errors.state"
+                  class="text-xs text-red-500 mt-1"
+                >
+                  {{ errors.state }}
+                </p>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <label class="block text-xs font-medium text-neutral-600 mb-1">ZIP / Postal Code *</label>
+                <SfInput
+                  v-model="address.zip"
+                  placeholder="10001"
+                  :invalid="!!errors.zip"
+                  class="w-full"
+                />
+                <p
+                  v-if="errors.zip"
+                  class="text-xs text-red-500 mt-1"
+                >
+                  {{ errors.zip }}
+                </p>
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-neutral-600 mb-1">Country *</label>
+                <SfInput
+                  v-model="address.country"
+                  placeholder="United States"
+                  :invalid="!!errors.country"
+                  class="w-full"
+                />
+                <p
+                  v-if="errors.country"
+                  class="text-xs text-red-500 mt-1"
+                >
+                  {{ errors.country }}
+                </p>
+              </div>
+            </div>
+
+            <!-- Save address toggle (registered users only) -->
+            <label
+              v-if="!isGuest"
+              class="flex items-center gap-2 cursor-pointer mt-1"
+            >
+              <input
+                v-model="saveAddress"
+                type="checkbox"
+                class="w-4 h-4 rounded accent-primary-700"
+              >
+              <span class="text-sm text-neutral-600">Save address for future orders</span>
+            </label>
+          </div>
+
+          <SfButton
+            class="w-full mt-6"
+            size="lg"
+            @click="continueToPayment"
+          >
+            Continue to Payment
+          </SfButton>
+        </div>
+
+        <!-- RIGHT — ORDER SUMMARY -->
+        <div class="w-full lg:w-80 shrink-0 bg-white rounded-2xl border border-neutral-200 shadow-sm p-6">
           <h2 class="text-base font-semibold text-neutral-800 mb-4">
             Order Summary
           </h2>
@@ -180,50 +280,9 @@ async function handlePay() {
             </div>
             <div class="flex justify-between font-bold text-neutral-900 text-base pt-2 border-t border-neutral-100">
               <span>Total</span>
-              <span>${{ total }}</span>
+              <span>${{ total() }}</span>
             </div>
           </div>
-        </div>
-
-        <!-- PAYMENT FORM -->
-        <div class="bg-white rounded-2xl shadow-sm border border-neutral-200 p-6">
-          <h2 class="text-base font-semibold text-neutral-800 mb-2">
-            Payment Details
-          </h2>
-          <p class="text-xs text-neutral-400 mb-5">
-            Test card: <span class="font-mono">4242 4242 4242 4242</span> · any future date · any CVC
-          </p>
-
-          <!-- Stripe card element mounts here -->
-          <div
-            id="stripe-card-element"
-            class="border border-neutral-300 rounded-xl px-4 py-3 mb-4 focus-within:border-primary-500 transition-colors"
-          />
-
-          <p
-            v-if="paymentError"
-            class="text-sm text-red-500 mb-3"
-          >
-            {{ paymentError }}
-          </p>
-
-          <SfButton
-            class="w-full"
-            size="lg"
-            :disabled="isProcessing"
-            @click="handlePay"
-          >
-            <SfLoaderCircular
-              v-if="isProcessing"
-              size="sm"
-              class="mr-2"
-            />
-            {{ isProcessing ? 'Processing…' : `Pay $${total}` }}
-          </SfButton>
-
-          <p class="text-center text-xs text-neutral-400 mt-3">
-            Secured by Stripe · No real charges in test mode
-          </p>
         </div>
       </div>
     </div>
