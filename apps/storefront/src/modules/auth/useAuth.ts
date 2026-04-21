@@ -24,6 +24,11 @@ const isLoginOpen = ref(false)
 const loginError = ref('')
 const loginLoading = ref(false)
 
+// Resolves after Firebase fires its first auth state — used by the router guard
+// to avoid redirecting before the session is known.
+let _resolveAuthReady!: () => void
+export const authReady = new Promise<void>((resolve) => { _resolveAuthReady = resolve })
+
 // Sync auth state from Firebase — runs once on startup and on every sign-in/out
 onAuthStateChanged(auth, (firebaseUser: User | null) => {
   if (firebaseUser) {
@@ -44,6 +49,7 @@ onAuthStateChanged(auth, (firebaseUser: User | null) => {
       currentUser.value = null
     }
   }
+  _resolveAuthReady()
 })
 
 async function login(email: string, password: string): Promise<boolean> {
