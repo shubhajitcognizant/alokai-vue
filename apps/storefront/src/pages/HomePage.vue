@@ -102,13 +102,13 @@ onMounted(async () => {
           Shop thousands of products at unbeatable prices. Free shipping on orders over $50.
         </p>
         <div class="flex gap-3 justify-center md:justify-start">
-           <SfButton
+          <SfButton
             size="lg"
             class="!bg-white !text-primary-700 hover:!bg-primary-50"
           >
             Shop Now
           </SfButton>
-         <SfButton
+          <SfButton
             size="lg"
             variant="secondary"
             class="!border-white !text-white hover:!bg-primary-600"
@@ -206,7 +206,7 @@ onMounted(async () => {
               <span class="block mt-1 font-bold text-sm">${{ product.price.toFixed(2) }}</span>
             </div>
           </div>
-           <template #nextButton="defaultProps">
+          <template #nextButton="defaultProps">
             <SfButton
               v-bind="defaultProps"
               class="absolute !rounded-full z-5 right-4 bg-white hidden md:block"
