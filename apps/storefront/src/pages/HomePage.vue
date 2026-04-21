@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
-import { RouterLink } from 'vue-router'
+import { RouterLink, useRouter } from 'vue-router'
 import {
   SfButton,
   SfRating,
@@ -37,6 +37,8 @@ const activeCategory = ref('All')
 const loading = ref(true)
 const error = ref('')
 const rawProducts = ref<ApiProduct[]>([])
+const router = useRouter()
+
 
 const categories = computed(() => {
   const unique = [...new Set(rawProducts.value.map((p) => p.category))]
@@ -257,7 +259,7 @@ onMounted(async () => {
       class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6"
     >
       <div
-        v-for="product in products"
+        v-for="product in products.slice(0, 4)"
         :key="product.product_id"
         class="bg-white border border-neutral-200 rounded-xl overflow-hidden hover:shadow-md transition-shadow group"
       >
@@ -321,6 +323,18 @@ onMounted(async () => {
           />
         </div>
       </div>
+    </div>
+    <div
+      v-if="!loading && !error"
+      class="flex justify-center mt-8"
+    >
+      <SfButton
+        variant="secondary"
+        size="lg"
+        @click="router.push(activeCategory === 'All' ? '/plp' : `/plp?category=${encodeURIComponent(activeCategory)}`)"
+      >
+        View All Products
+      </SfButton>
     </div>
   </section>
 </template>

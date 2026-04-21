@@ -11,6 +11,7 @@ import PaymentPage from '../pages/PaymentPage.vue'
 import OrderSuccessPage from '../pages/OrderSuccessPage.vue'
 import { useAuth, authReady } from '../modules/auth/useAuth'
 import SidePanelPage from '../pages/SidePanelPage.vue'
+import ProductListPage from '../pages/ProductListPage.vue'
 
 const router = createRouter({
   history: createWebHistory(),
@@ -19,6 +20,7 @@ const router = createRouter({
     { path: '/login', component: LoginPage },
     { path: '/signup', component: SignUpPage },
     { path: '/product/:id', component: ProductDetailPage },
+    { path: '/plp', component: ProductListPage },
     { path: '/cart', component: CartPage },
     { path: '/user', component: UserProfilePage, meta: { requiresAuth: true } },
     { path: '/orders', component: OrderHistoryPage, meta: { requiresAuth: true } },
@@ -28,6 +30,7 @@ const router = createRouter({
     { path: '/account', component: SidePanelPage, meta: { requiresAuth: true } },
   ],
 })
+
 router.beforeEach(async (to) => {
   await authReady
   const { isLoggedIn, isGuest } = useAuth()
