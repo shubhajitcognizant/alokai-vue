@@ -121,11 +121,6 @@ const handleShowProducts = () => {
         <SfIconClose />
       </button>
     </div>
-    <h5
-      class="px-4 py-2 mt-6 mb-4 font-bold tracking-widest uppercase bg-neutral-100 typography-headline-6 text-neutral-900 md:rounded-md"
-    >
-      Filter
-    </h5>
     <ul>
       <!-- prettier-ignore-attribute -->
       <li

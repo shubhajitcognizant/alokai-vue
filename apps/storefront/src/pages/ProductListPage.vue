@@ -6,7 +6,6 @@ import {
   SfButton,
   SfIconChevronLeft,
   SfIconChevronRight,
-  SfSelect,
   SfRating,
 } from '@storefront-ui/vue'
 import FilterSlidePanel from '../components/FilterSlidepanel.vue';
@@ -101,18 +100,29 @@ watch(displayProducts, () => { currentPage.value = 1; });
               >
                 Showing {{ displayProducts.length ? (currentPage - 1) * PAGE_SIZE + 1 : 0 }}–{{ Math.min(currentPage * PAGE_SIZE, displayProducts.length) }} of {{ displayProducts.length }} products
               </p>
-              <SfSelect
-                v-model="selected"
-                aria-label="Sort by"
-              >
-                <option
-                  v-for="{ value, label } in options"
-                  :key="value"
-                  :value="value"
+              <div class="relative inline-flex items-center">
+                <select
+                  v-model="selected"
+                  aria-label="Sort by"
+                  class="appearance-none border border-neutral-300 rounded-md pl-3 pr-9 py-2 text-sm bg-white text-neutral-900 cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
                 >
-                  {{ label }}
-                </option>
-              </SfSelect>
+                  <option
+                    v-for="{ value, label } in options"
+                    :key="value"
+                    :value="value"
+                  >
+                    {{ label }}
+                  </option>
+                </select>
+                <svg
+                  class="pointer-events-none absolute right-3 w-4 h-4 text-neutral-500"
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                >
+                  <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd" />
+                </svg>
+              </div>
             </div>
           </div>
           <div

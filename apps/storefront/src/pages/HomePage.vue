@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
-import { RouterLink } from 'vue-router'
+import { RouterLink, useRouter } from 'vue-router'
 import {
   SfButton,
   SfRating,
@@ -37,6 +37,8 @@ const activeCategory = ref('All')
 const loading = ref(true)
 const error = ref('')
 const rawProducts = ref<ApiProduct[]>([])
+const router = useRouter()
+
 
 const categories = computed(() => {
   const unique = [...new Set(rawProducts.value.map((p) => p.category))]
@@ -100,13 +102,13 @@ onMounted(async () => {
           Shop thousands of products at unbeatable prices. Free shipping on orders over $50.
         </p>
         <div class="flex gap-3 justify-center md:justify-start">
-          <SfButton
+           <SfButton
             size="lg"
             class="!bg-white !text-primary-700 hover:!bg-primary-50"
           >
             Shop Now
           </SfButton>
-          <SfButton
+         <SfButton
             size="lg"
             variant="secondary"
             class="!border-white !text-white hover:!bg-primary-600"
@@ -204,7 +206,7 @@ onMounted(async () => {
               <span class="block mt-1 font-bold text-sm">${{ product.price.toFixed(2) }}</span>
             </div>
           </div>
-          <template #nextButton="defaultProps">
+           <template #nextButton="defaultProps">
             <SfButton
               v-bind="defaultProps"
               class="absolute !rounded-full z-5 right-4 bg-white hidden md:block"
@@ -260,7 +262,7 @@ onMounted(async () => {
       class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6"
     >
       <div
-        v-for="product in products"
+        v-for="product in products.slice(0, 4)"
         :key="product.product_id"
         class="bg-white border border-neutral-200 rounded-xl overflow-hidden hover:shadow-md transition-shadow group"
       >
@@ -324,6 +326,18 @@ onMounted(async () => {
           />
         </div>
       </div>
+    </div>
+    <div
+      v-if="!loading && !error"
+      class="flex justify-center mt-8"
+    >
+      <SfButton
+        variant="secondary"
+        size="lg"
+        @click="router.push(activeCategory === 'All' ? '/plp' : `/plp?category=${encodeURIComponent(activeCategory)}`)"
+      >
+        View All Products
+      </SfButton>
     </div>
   </section>
 </template>
