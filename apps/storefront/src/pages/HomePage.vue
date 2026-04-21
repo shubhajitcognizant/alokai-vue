@@ -204,21 +204,21 @@ onMounted(async () => {
             </div>
             <SfButton
               variant="tertiary"
-              class="w-full !justify-start"
+              class="w-full justify-start!"
               @click="router.push('/user')"
             >
               My Profile
             </SfButton>
             <SfButton
               variant="tertiary"
-              class="w-full !justify-start"
+              class="w-full justify-start!"
               @click="router.push('/orders')"
             >
               Order History
             </SfButton>
             <SfButton
               variant="tertiary"
-              class="w-full !justify-start !text-red-500 hover:!bg-red-50"
+              class="w-full justify-start! text-red-500! hover:bg-red-50!"
               @click="logout"
             >
               Logout
@@ -240,14 +240,14 @@ onMounted(async () => {
           <div class="absolute right-0 top-full mt-1 w-48 bg-white rounded-xl shadow-lg border border-neutral-100 overflow-hidden opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-20">
             <SfButton
               variant="tertiary"
-              class="w-full !justify-start"
+              class="w-full justify-start!"
               @click="router.push('/login')"
             >
               Login
             </SfButton>
             <SfButton
               variant="tertiary"
-              class="w-full !justify-start"
+              class="w-full justify-start!"
               @click="router.push('/signup')"
             >
               Sign Up
@@ -265,7 +265,7 @@ onMounted(async () => {
           <SfBadge
             v-if="cartCount > 0"
             :content="cartCount"
-            class="!bg-primary-700 outline outline-white outline-2 absolute -top-1 -right-1"
+            class="bg-primary-700! outline outline-white outline-2 absolute -top-1 -right-1"
           />
         </SfButton>
       </div>
@@ -360,14 +360,14 @@ onMounted(async () => {
         <div class="flex gap-3 justify-center md:justify-start">
           <SfButton
             size="lg"
-            class="!bg-white !text-primary-700 hover:!bg-primary-50"
+            class="bg-white! text-primary-700! hover:bg-primary-50!"
           >
             Shop Now
           </SfButton>
           <SfButton
             size="lg"
             variant="secondary"
-            class="!border-white !text-white hover:!bg-primary-600"
+            class="border-white! text-white! hover:bg-primary-600!"
           >
             Learn More
           </SfButton>
@@ -384,7 +384,7 @@ onMounted(async () => {
   </section>
 
   <!-- HOT ON SALES SLIDER -->
-  <section class="max-w-7xl mx-auto px-4 py-8 border-b border-neutral-200 [overflow-x:clip]">
+  <section class="max-w-7xl mx-auto px-4 py-8 border-b border-neutral-200 overflow-x-clip">
     <div class="flex flex-col gap-2 flex-wrap justify-center">
       <h2 class="text-center text-4xl uppercase font-semibold mb-6">
         Hot On Sales
@@ -416,8 +416,8 @@ onMounted(async () => {
           <template #previousButton="defaultProps">
             <SfButton
               v-bind="defaultProps"
-              class="absolute !rounded-full z-5 left-4 bg-white hidden md:block"
-              :class="{ '!hidden': defaultProps.disabled }"
+              class="absolute rounded-full! z-5 left-4 bg-white hidden md:block"
+              :class="{ 'hidden!': defaultProps.disabled }"
               variant="secondary"
               size="lg"
               square
@@ -428,7 +428,7 @@ onMounted(async () => {
           <div
             v-for="product in products"
             :key="product.product_id"
-            class="first:ms-auto last:me-auto border border-neutral-200 shrink-0 rounded-md hover:shadow-lg w-[148px] lg:w-[192px]"
+            class="first:ms-auto last:me-auto border border-neutral-200 shrink-0 rounded-md hover:shadow-lg w-37 lg:w-48"
           >
             <div class="relative">
               <RouterLink
@@ -446,7 +446,7 @@ onMounted(async () => {
                 variant="tertiary"
                 size="sm"
                 square
-                class="absolute bottom-0 right-0 mr-2 mb-2 bg-white ring-1 ring-inset ring-neutral-200 !rounded-full"
+                class="absolute bottom-0 right-0 mr-2 mb-2 bg-white ring-1 ring-inset ring-neutral-200 rounded-full!"
                 aria-label="Add to wishlist"
               >
                 <SfIconFavorite size="sm" />
@@ -465,8 +465,8 @@ onMounted(async () => {
           <template #nextButton="defaultProps">
             <SfButton
               v-bind="defaultProps"
-              class="absolute !rounded-full z-5 right-4 bg-white hidden md:block"
-              :class="{ '!hidden': defaultProps.disabled }"
+              class="absolute rounded-full! z-5 right-4 bg-white hidden md:block"
+              :class="{ 'hidden!': defaultProps.disabled }"
               variant="secondary"
               size="lg"
               square
@@ -518,7 +518,7 @@ onMounted(async () => {
       class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6"
     >
       <div
-        v-for="product in products"
+        v-for="product in products.slice(0, 4)"
         :key="product.product_id"
         class="bg-white border border-neutral-200 rounded-xl overflow-hidden hover:shadow-md transition-shadow group"
       >
@@ -546,7 +546,7 @@ onMounted(async () => {
               variant="tertiary"
               square
               size="sm"
-              class="absolute top-2 right-2 !bg-white shadow opacity-0 group-hover:opacity-100 transition-opacity"
+              class="absolute top-2 right-2 bg-white! shadow opacity-0 group-hover:opacity-100 transition-opacity"
             >
               <SfIconFavorite
                 class="text-neutral-500"
@@ -582,6 +582,18 @@ onMounted(async () => {
           />
         </div>
       </div>
+    </div>
+    <div
+      v-if="!loading && !error"
+      class="flex justify-center mt-8"
+    >
+      <SfButton
+        variant="secondary"
+        size="lg"
+        @click="router.push(activeCategory === 'All' ? '/plp' : `/plp?category=${encodeURIComponent(activeCategory)}`)"
+      >
+        View All Products
+      </SfButton>
     </div>
   </section>
 

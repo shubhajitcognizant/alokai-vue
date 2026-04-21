@@ -1,21 +1,21 @@
 <script lang="ts" setup>
-import { ref } from 'vue';
+import { ref, computed, watch } from 'vue';
+import type { Product } from '../modules/products/useProducts';
 import {
   SfAccordionItem,
   SfButton,
-  SfChip,
-  SfCheckbox,
   SfCounter,
-  SfIconArrowBack,
   SfIconChevronLeft,
-  SfIconCheck,
   SfIconClose,
   SfListItem,
   SfRadio,
   SfRating,
-  SfSelect,
-  SfThumbnail,
 } from '@storefront-ui/vue';
+
+const props = defineProps<{
+  products: Product[];
+  initialCategory?: string;
+}>();
 
 type FilterDetail = {
   id: string;
@@ -32,169 +32,78 @@ type Node = {
   details: FilterDetail[];
 };
 
-const filtersData = ref<Node[]>([
-  {
-    id: 'acc1',
-    summary: 'Size',
-    type: 'size',
-    details: [
-      { id: 's1', label: '6', value: '6', counter: 10 },
-      { id: 's2', label: '6.5', value: '6.5', counter: 10 },
-      { id: 's3', label: '7', value: '7.5', counter: 30 },
-      { id: 's4', label: '8', value: '8', counter: 0 },
-      { id: 's5', label: '8.5', value: '8.5', counter: 3 },
-      { id: 's6', label: '9', value: '9', counter: 7 },
-      { id: 's7', label: '9.5', value: '9.5', counter: 9 },
-      { id: 's8', label: '10', value: '10', counter: 11 },
-      { id: 's9', label: '10.5', value: '10.5', counter: 12 },
-      { id: 's10', label: '11', value: '11', counter: 0 },
-      { id: 's11', label: '11.5', value: '11.5', counter: 4 },
-      { id: 's12', label: '12', value: '12', counter: 1 },
-    ],
-  },
+const filtersData = computed<Node[]>(() => {
+  const categoryMap = new Map<string, number>();
+  props.products.forEach((p) => {
+    if (p.category) categoryMap.set(p.category, (categoryMap.get(p.category) ?? 0) + 1);
+  });
+  const dynamicCategories = Array.from(categoryMap.entries()).map(([cat, count]) => ({
+    id: cat.toUpperCase().replace(/[\s&]+/g, '_'),
+    label: cat.charAt(0).toUpperCase() + cat.slice(1),
+    value: cat,
+    counter: count,
+  }));
+
+  return [
   {
     id: 'acc2',
     summary: 'Category',
     type: 'category',
-    details: [
-      {
-        id: 'CLOTHING',
-        label: 'Clothing',
-        value: 'clothing',
-        counter: 30,
-        link: '#',
-      },
-      {
-        id: 'SHOES',
-        label: 'Shoes',
-        value: 'shoes',
-        counter: 28,
-        link: '#',
-      },
-      {
-        id: 'ACCESSORIES',
-        label: 'Accessories',
-        value: 'accessories',
-        counter: 56,
-        link: '#',
-      },
-      {
-        id: 'WEARABLES',
-        label: 'Wearables',
-        value: 'wearables',
-        counter: 12,
-        link: '#',
-      },
-      {
-        id: 'FOOD_DRINKS',
-        label: 'Food & Drinks',
-        value: 'food and drinks',
-        counter: 52,
-        link: '#',
-      },
-    ],
-  },
-  {
-    id: 'acc3',
-    summary: 'Color',
-    type: 'color',
-    details: [
-      {
-        id: 'c1',
-        label: 'Primary',
-        value: 'bg-primary-500',
-        counter: 10,
-      },
-      {
-        id: 'c2',
-        label: 'Black and gray',
-        value: 'bg-[linear-gradient(-45deg,#000_50%,#d1d5db_50%)]',
-        counter: 5,
-      },
-      {
-        id: 'c3',
-        label: 'Violet',
-        value: 'bg-violet-500',
-        counter: 0,
-      },
-      {
-        id: 'c4',
-        label: 'Red',
-        value: 'bg-red-500',
-        counter: 2,
-      },
-      {
-        id: 'c5',
-        label: 'Yellow',
-        value: 'bg-yellow-500',
-        counter: 100,
-      },
-      {
-        id: 'c6',
-        label: 'Avocado',
-        value: 'bg-gradient-to-tr from-yellow-300 to-primary-500',
-        counter: 14,
-      },
-    ],
-  },
-  {
-    id: 'acc4',
-    summary: 'Brand',
-    type: 'checkbox',
-    details: [
-      { id: 'b1', label: 'Conroy', value: 'conroy', counter: 10 },
-      { id: 'b2', label: 'Goyette', value: 'goyette', counter: 100 },
-      { id: 'b3', label: 'Ledner & Ward', value: 'lednerward', counter: 0 },
-      { id: 'b4', label: 'Pacocha', value: 'pacocha', counter: 3 },
-    ],
+    details: dynamicCategories,
   },
   {
     id: 'acc5',
     summary: 'Price',
-    type: 'radio',
-    details: [
-      { id: 'pr1', label: 'Under $24.99', value: 'under', counter: 123 },
-      { id: 'pr2', label: '$25.00 - $49.99', value: '25-49', counter: 100 },
-      { id: 'pr3', label: '$50.00 - $99.99', value: '50-99', counter: 12 },
-      { id: 'pr4', label: '$100.00 - $199.99', value: '100-199', counter: 3 },
-      { id: 'pr5', label: '$200.00 and above', value: 'above', counter: 18 },
-    ],
+    type: 'price-range',
+    details: [],
   },
   {
     id: 'acc6',
     summary: 'Rating',
     type: 'rating',
     details: [
-      { id: 'r1', label: '5', value: '5', counter: 10 },
-      { id: 'r2', label: '4 & up', value: '4', counter: 123 },
-      { id: 'r3', label: '3 & up', value: '3', counter: 12 },
-      { id: 'r4', label: '2 & up', value: '2', counter: 3 },
-      { id: 'r5', label: '1 & up', value: '1', counter: 13 },
+      { id: 'r1', label: '5', value: '5', counter: props.products.filter((p) => Math.round(p.rating) >= 5).length },
+      { id: 'r2', label: '4 & up', value: '4', counter: props.products.filter((p) => Math.round(p.rating) >= 4).length },
+      { id: 'r3', label: '3 & up', value: '3', counter: props.products.filter((p) => Math.round(p.rating) >= 3).length },
+      { id: 'r4', label: '2 & up', value: '2', counter: props.products.filter((p) => Math.round(p.rating) >= 2).length },
+      { id: 'r5', label: '1 & up', value: '1', counter: props.products.filter((p) => Math.round(p.rating) >= 1).length },
     ],
   },
-]);
-const sortOptions = ref([
-  { id: 'sort1', label: 'Relevance', value: 'relevance' },
-  { id: 'sort2', label: 'Price: Low to High', value: 'price low to high' },
-  { id: 'sort3', label: 'Price: High to Low', value: 'price high to low' },
-  { id: 'sort4', label: 'New Arrivals', value: 'new arrivals' },
-  { id: 'sort5', label: 'Customer Rating', value: 'customer rating' },
-  { id: 'sort6', label: 'Bestsellers', value: 'bestsellers' },
-]);
+  ];
+});
 
-const selectedFilters = ref<string[]>([]);
+const emit = defineEmits<{
+  'apply-filters': [filters: { rating: string; category: string; priceMin: number; priceMax: number }];
+}>();
+
+const maxProductPrice = computed(() =>
+  props.products.length ? Math.ceil(Math.max(...props.products.map((p) => p.price))) : 0,
+);
+
 const opened = ref<boolean[]>(filtersData.value.map(() => true));
-const priceModel = ref('');
+const priceMin = ref(0);
+const priceMax = ref(0);
 const ratingsModel = ref('');
-const sortModel = ref();
+const categoryModel = ref(props.initialCategory ?? '');
 
-const isItemActive = (selectedValue: string) => {
-  return selectedFilters.value?.includes(selectedValue);
-};
+watch(maxProductPrice, (max) => {
+  if (max > 0 && priceMax.value === 0) priceMax.value = max;
+}, { immediate: true });
+
 const handleClearFilters = () => {
-  selectedFilters.value = [];
-  priceModel.value = '';
+  priceMin.value = 0;
+  priceMax.value = maxProductPrice.value;
   ratingsModel.value = '';
+  categoryModel.value = '';
+  emit('apply-filters', { rating: '', category: '', priceMin: 0, priceMax: maxProductPrice.value });
+};
+const handleShowProducts = () => {
+  emit('apply-filters', {
+    rating: ratingsModel.value,
+    category: categoryModel.value,
+    priceMin: priceMin.value,
+    priceMax: priceMax.value,
+  });
 };
 </script>
 
@@ -211,25 +120,6 @@ const handleClearFilters = () => {
       >
         <SfIconClose />
       </button>
-    </div>
-    <h5
-      class="px-4 py-2 mb-6 font-bold tracking-widest uppercase bg-neutral-100 typography-headline-6 text-neutral-900 md:rounded-md"
-    >
-      Sort by
-    </h5>
-    <div class="px-2">
-      <SfSelect
-        v-model="sortModel"
-        aria-label="Sort by"
-      >
-        <option
-          v-for="{ id, label, value } in sortOptions"
-          :key="id"
-          :value="value"
-        >
-          {{ label }}
-        </option>
-      </SfSelect>
     </div>
     <h5
       class="px-4 py-2 mt-6 mb-4 font-bold tracking-widest uppercase bg-neutral-100 typography-headline-6 text-neutral-900 md:rounded-md"
@@ -251,127 +141,8 @@ const handleClearFilters = () => {
               <SfIconChevronLeft :class="opened[index] ? 'rotate-90' : '-rotate-90'" />
             </div>
           </template>
-          <ul
-            v-if="type === 'size'"
-            class="grid grid-cols-5 gap-2"
-          >
-            <li
-              v-for="{ id, value, counter, label } in details"
-              :key="id"
-            >
-              <SfChip
-                v-model="selectedFilters"
-                class="w-full"
-                size="sm"
-                :input-props="{ value, disabled: !counter }"
-              >
-                {{ label }}
-              </SfChip>
-            </li>
-          </ul>
           <template v-if="type === 'category'">
-            <ul class="mt-2 mb-6">
-              <li>
-                <SfListItem
-                  size="sm"
-                  tag="button"
-                  type="button"
-                >
-                  <div class="flex items-center">
-                    <SfIconArrowBack
-                      size="sm"
-                      class="mr-3 text-neutral-500"
-                    />
-                    Back to {{ details[0].label }}
-                  </div>
-                </SfListItem>
-              </li>
-              <li
-                v-for="({ id, link, label, counter }, categoryIndex) in details"
-                :key="id"
-              >
-                <SfListItem
-                  size="sm"
-                  tag="a"
-                  :href="link"
-                  :class="[
-                    'first-of-type:mt-2 rounded-md active:bg-primary-100',
-                    { 'bg-primary-100 hover:bg-primary-100 active:bg-primary-100 font-medium': categoryIndex === 0 },
-                  ]"
-                >
-                  <template #suffix>
-                    <SfIconCheck
-                      v-if="categoryIndex === 0"
-                      size="xs"
-                      class="text-primary-700"
-                    />
-                  </template>
-                  <span class="flex items-center">
-                    {{ label }}
-                    <SfCounter class="ml-2 typography-text-sm">{{ counter }}</SfCounter>
-                  </span>
-                </SfListItem>
-              </li>
-            </ul>
-          </template>
-          <template v-if="type === 'color'">
-            <SfListItem
-              v-for="{ id, value, label, counter } in details"
-              :key="id"
-              size="sm"
-              tag="label"
-              :class="['px-1.5 bg-transparent hover:bg-transparent', { 'font-medium': isItemActive(value) }]"
-              :selected="isItemActive(value)"
-            >
-              <template #prefix>
-                <input
-                  v-model="selectedFilters"
-                  :value="value"
-                  class="appearance-none peer"
-                  type="checkbox"
-                >
-                <span
-                  class="inline-flex items-center justify-center p-1 transition duration-300 rounded-full cursor-pointer ring-1 ring-neutral-200 ring-inset outline-offset-2 outline-secondary-600 peer-checked:ring-2 peer-checked:ring-primary-700 peer-hover:bg-primary-100 peer-[&:not(:checked):hover]:ring-primary-200 peer-active:bg-primary-200 peer-active:ring-primary-300 peer-disabled:cursor-not-allowed peer-disabled:bg-disabled-100 peer-disabled:opacity-50 peer-disabled:ring-1 peer-disabled:ring-disabled-200 peer-disabled:hover:ring-disabled-200 peer-checked:hover:ring-primary-700 peer-checked:active:ring-primary-700 peer-focus-visible:outline"
-                ><SfThumbnail
-                  size="sm"
-                  :class="value"
-                /></span>
-              </template>
-              <p>
-                <span class="mr-2 typography-text-sm">{{ label }}</span>
-                <SfCounter size="sm">
-                  {{ counter }}
-                </SfCounter>
-              </p>
-            </SfListItem>
-          </template>
-          <template v-if="type === 'checkbox'">
-            <SfListItem
-              v-for="{ id, value, label, counter } in details"
-              :key="id"
-              tag="label"
-              size="sm"
-              :disabled="counter === 0"
-              :class="['px-1.5 bg-transparent hover:bg-transparent', { 'font-medium': isItemActive(value) }]"
-            >
-              <template #prefix>
-                <SfCheckbox
-                  v-model="selectedFilters"
-                  wrapper-class="flex items-center"
-                  :disabled="counter === 0"
-                  :value="value"
-                />
-              </template>
-              <p>
-                <span class="mr-2 text-sm">{{ label }}</span>
-                <SfCounter size="sm">
-                  {{ counter }}
-                </SfCounter>
-              </p>
-            </SfListItem>
-          </template>
-          <template v-if="type === 'radio'">
-            <fieldset id="radio-price">
+            <fieldset id="radio-category">
               <SfListItem
                 v-for="{ id, value, label, counter } in details"
                 :key="id"
@@ -381,21 +152,58 @@ const handleClearFilters = () => {
               >
                 <template #prefix>
                   <SfRadio
-                    v-model="priceModel"
+                    v-model="categoryModel"
                     class="flex items-center"
-                    name="radio-price"
+                    name="radio-category"
                     :value="value"
-                    @click="priceModel = priceModel === value ? '' : value"
+                    @click="categoryModel = categoryModel === value ? '' : value"
                   />
                 </template>
                 <p>
-                  <span :class="['text-sm mr-2', { 'font-medium': priceModel === value }]">{{ label }}</span>
+                  <span :class="['text-sm mr-2', { 'font-medium': categoryModel === value }]">{{ label }}</span>
                   <SfCounter size="sm">
                     {{ counter }}
                   </SfCounter>
                 </p>
               </SfListItem>
             </fieldset>
+          </template>
+          <template v-if="type === 'price-range'">
+            <div class="px-2 pt-2 pb-4">
+              <div class="price-slider-wrap">
+                <div class="price-track">
+                  <div
+                    class="price-track-fill"
+                    :style="{
+                      left: `${(priceMin / maxProductPrice) * 100}%`,
+                      width: `${((priceMax - priceMin) / maxProductPrice) * 100}%`,
+                    }"
+                  />
+                </div>
+                <input
+                  type="range"
+                  class="price-thumb"
+                  :min="0"
+                  :max="maxProductPrice"
+                  :step="1"
+                  :value="priceMin"
+                  @input="priceMin = Math.min(Number(($event.target as HTMLInputElement).value), priceMax)"
+                >
+                <input
+                  type="range"
+                  class="price-thumb"
+                  :min="0"
+                  :max="maxProductPrice"
+                  :step="1"
+                  :value="priceMax"
+                  @input="priceMax = Math.max(Number(($event.target as HTMLInputElement).value), priceMin)"
+                >
+              </div>
+              <div class="flex justify-between mt-3 text-sm font-medium text-neutral-700">
+                <span>${{ priceMin }}</span>
+                <span>${{ priceMax }}</span>
+              </div>
+            </div>
           </template>
           <template v-if="type === 'rating'">
             <fieldset id="radio-ratings">
@@ -445,9 +253,70 @@ const handleClearFilters = () => {
       >
         Clear all filters
       </SfButton>
-      <SfButton class="w-full">
+      <SfButton
+        class="w-full"
+        @click="handleShowProducts"
+      >
         Show products
       </SfButton>
     </div>
   </aside>
 </template>
+
+<style scoped>
+.price-slider-wrap {
+  position: relative;
+  height: 6px;
+  margin: 12px 0;
+}
+
+.price-track {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 6px;
+  border-radius: 9999px;
+  background-color: #e5e7eb;
+}
+
+.price-track-fill {
+  position: absolute;
+  height: 100%;
+  border-radius: 9999px;
+  background-color: var(--color-primary-700);
+}
+
+.price-thumb {
+  position: absolute;
+  top: -5px;
+  left: 0;
+  width: 100%;
+  height: 16px;
+  background: transparent;
+  appearance: none;
+  pointer-events: none;
+  outline: none;
+}
+
+.price-thumb::-webkit-slider-thumb {
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background-color: #fff;
+  border: 2px solid var(--color-primary-700);
+  cursor: pointer;
+  pointer-events: auto;
+}
+
+.price-thumb::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background-color: #fff;
+  border: 2px solid var(--color-primary-700);
+  cursor: pointer;
+  pointer-events: auto;
+}
+</style>
