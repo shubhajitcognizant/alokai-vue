@@ -71,229 +71,6 @@ onMounted(async () => {
 </script>
 
 <template>
-  <CartDrawer />
-
-  <!-- NAVBAR -->
-  <header class="sticky top-0 z-10 bg-white shadow-sm">
-    <div class="max-w-7xl mx-auto px-4 flex items-center gap-4 h-16">
-      <SfButton
-        variant="tertiary"
-        square
-        class="md:hidden"
-      >
-        <SfIconMenu />
-      </SfButton>
-
-      <a
-        href="/"
-        class="text-xl font-bold text-primary-700 shrink-0"
-      >ShopVue</a>
-
-      <div class="flex-1 hidden md:block max-w-xl relative">
-        <SfInput
-          v-model="searchQuery"
-          placeholder="Search products..."
-          class="w-full"
-        >
-          <template #prefix>
-            <SfIconSearch class="text-neutral-500" />
-          </template>
-        </SfInput>
-
-        <!-- Search Results Dropdown -->
-        <div
-          v-if="searchResults.length > 0"
-          class="absolute top-full left-0 right-0 mt-1 bg-white border border-neutral-200 rounded-xl shadow-xl z-50 overflow-hidden"
-        >
-          <RouterLink
-            v-for="result in searchResults"
-            :key="result.product_id"
-            :to="`/product/${result.product_id}`"
-            class="flex items-center gap-3 px-4 py-3 hover:bg-neutral-50 transition-colors"
-            @click="searchQuery = ''"
-          >
-            <img
-              :src="result.image"
-              :alt="result.name"
-              class="w-10 h-10 rounded-lg object-cover shrink-0"
-            >
-            <div class="flex-1 min-w-0">
-              <p class="text-sm font-medium text-neutral-800 truncate">
-                {{ result.name }}
-              </p>
-              <p class="text-xs text-neutral-400">
-                {{ result.category }}
-              </p>
-            </div>
-            <span class="text-sm font-semibold text-neutral-900 shrink-0">${{ result.price.toFixed(2) }}</span>
-          </RouterLink>
-          <!-- No results state -->
-          <div
-            v-if="searchResults.length === 0 && searchQuery.trim()"
-            class="px-4 py-6 text-center text-sm text-neutral-400"
-          >
-            No products found for "{{ searchQuery }}"
-          </div>
-        </div>
-      </div>
-
-      <div class="flex items-center gap-2 ml-auto">
-        <SfButton
-          variant="tertiary"
-          square
-          @click="mobileSearchOpen = !mobileSearchOpen"
-        >
-          <SfIconSearch class="md:hidden" />
-        </SfButton>
-
-        <div
-          v-if="isLoggedIn"
-          class="relative group"
-        >
-          <SfButton
-            variant="tertiary"
-            square
-          >
-            <SfIconPerson class="text-primary-700" />
-          </SfButton>
-
-          <!-- User dropdown -->
-          <div class="absolute right-0 top-full mt-1 w-48 bg-white rounded-xl shadow-lg border border-neutral-100 overflow-hidden opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-20">
-            <div class="px-4 py-3 border-b border-neutral-100">
-              <p class="text-xs text-neutral-400">
-                Logged in as
-              </p>
-              <p class="text-sm font-semibold text-neutral-800 truncate">
-                {{ currentUser?.username }}
-              </p>
-            </div>
-            <SfButton
-              variant="tertiary"
-              class="w-full justify-start!"
-              @click="router.push('/user')"
-            >
-              My Profile
-            </SfButton>
-            <SfButton
-              variant="tertiary"
-              class="w-full justify-start!"
-              @click="router.push('/orders')"
-            >
-              Order History
-            </SfButton>
-            <SfButton
-              variant="tertiary"
-              class="w-full justify-start! text-red-500! hover:bg-red-50!"
-              @click="logout"
-            >
-              Logout
-            </SfButton>
-          </div>
-        </div>
-        <div
-          v-else
-          class="relative group"
-        >
-          <SfButton
-            variant="tertiary"
-            square
-          >
-            <SfIconPerson />
-          </SfButton>
-
-          <!-- Guest dropdown -->
-          <div class="absolute right-0 top-full mt-1 w-48 bg-white rounded-xl shadow-lg border border-neutral-100 overflow-hidden opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-20">
-            <SfButton
-              variant="tertiary"
-              class="w-full justify-start!"
-              @click="router.push('/login')"
-            >
-              Login
-            </SfButton>
-            <SfButton
-              variant="tertiary"
-              class="w-full justify-start!"
-              @click="router.push('/signup')"
-            >
-              Sign Up
-            </SfButton>
-          </div>
-        </div>
-
-        <SfButton
-          variant="tertiary"
-          square
-          class="relative"
-          @click="isOpen = true"
-        >
-          <SfIconShoppingCart />
-          <SfBadge
-            v-if="cartCount > 0"
-            :content="cartCount"
-            class="bg-primary-700! outline outline-white outline-2 absolute -top-1 -right-1"
-          />
-        </SfButton>
-      </div>
-    </div>
-    <!-- Mobile Search Bar -->
-    <div
-      v-if="mobileSearchOpen"
-      class="md:hidden px-4 pb-3 border-t border-neutral-100"
-    >
-      <div class="relative">
-        <SfInput
-          v-model="searchQuery"
-          placeholder="Search products..."
-          class="w-full"
-          autofocus
-        >
-          <template #prefix>
-            <SfIconSearch class="text-neutral-500" />
-          </template>
-          <template #suffix>
-            <SfButton
-              variant="tertiary"
-              square
-              size="sm"
-              @click="mobileSearchOpen = false; searchQuery = ''"
-            >
-              <SfIconClose size="sm" />
-            </SfButton>
-          </template>
-        </SfInput>
-
-        <!-- Mobile Search Results Dropdown -->
-        <div
-          v-if="searchResults.length > 0"
-          class="absolute top-full left-0 right-0 mt-1 bg-white border border-neutral-200 rounded-xl shadow-xl z-50 overflow-hidden"
-        >
-          <RouterLink
-            v-for="result in searchResults"
-            :key="result.product_id"
-            :to="`/product/${result.product_id}`"
-            class="flex items-center gap-3 px-4 py-3 hover:bg-neutral-50 transition-colors"
-            @click="searchQuery = ''; mobileSearchOpen = false"
-          >
-            <img
-              :src="result.image"
-              :alt="result.name"
-              class="w-10 h-10 rounded-lg object-cover shrink-0"
-            >
-            <div class="flex-1 min-w-0">
-              <p class="text-sm font-medium text-neutral-800 truncate">
-                {{ result.name }}
-              </p>
-              <p class="text-xs text-neutral-400">
-                {{ result.category }}
-              </p>
-            </div>
-            <span class="text-sm font-semibold text-neutral-900 shrink-0">${{ result.price.toFixed(2) }}</span>
-          </RouterLink>
-        </div>
-      </div>
-    </div>
-  </header>
-
   <Carousel v-bind="carouselConfig">
     <Slide
       v-for="slide in 10"
@@ -325,14 +102,14 @@ onMounted(async () => {
         <div class="flex gap-3 justify-center md:justify-start">
           <SfButton
             size="lg"
-            class="bg-white! text-primary-700! hover:bg-primary-50!"
+            class="!bg-white !text-primary-700 hover:!bg-primary-50"
           >
             Shop Now
           </SfButton>
           <SfButton
             size="lg"
             variant="secondary"
-            class="border-white! text-white! hover:bg-primary-600!"
+            class="!border-white !text-white hover:!bg-primary-600"
           >
             Learn More
           </SfButton>
@@ -349,7 +126,7 @@ onMounted(async () => {
   </section>
 
   <!-- HOT ON SALES SLIDER -->
-  <section class="max-w-7xl mx-auto px-4 py-8 border-b border-neutral-200 overflow-x-clip">
+  <section class="max-w-7xl mx-auto px-4 py-8 border-b border-neutral-200 [overflow-x:clip]">
     <div class="flex flex-col gap-2 flex-wrap justify-center">
       <h2 class="text-center text-4xl uppercase font-semibold mb-6">
         Hot On Sales
@@ -381,8 +158,8 @@ onMounted(async () => {
           <template #previousButton="defaultProps">
             <SfButton
               v-bind="defaultProps"
-              class="absolute rounded-full! z-5 left-4 bg-white hidden md:block"
-              :class="{ 'hidden!': defaultProps.disabled }"
+              class="absolute !rounded-full z-5 left-4 bg-white hidden md:block"
+              :class="{ '!hidden': defaultProps.disabled }"
               variant="secondary"
               size="lg"
               square
@@ -393,7 +170,7 @@ onMounted(async () => {
           <div
             v-for="product in products"
             :key="product.product_id"
-            class="first:ms-auto last:me-auto border border-neutral-200 shrink-0 rounded-md hover:shadow-lg w-37 lg:w-48"
+            class="first:ms-auto last:me-auto border border-neutral-200 shrink-0 rounded-md hover:shadow-lg w-[148px] lg:w-[192px]"
           >
             <div class="relative">
               <RouterLink
@@ -411,7 +188,7 @@ onMounted(async () => {
                 variant="tertiary"
                 size="sm"
                 square
-                class="absolute bottom-0 right-0 mr-2 mb-2 bg-white ring-1 ring-inset ring-neutral-200 rounded-full!"
+                class="absolute bottom-0 right-0 mr-2 mb-2 bg-white ring-1 ring-inset ring-neutral-200 !rounded-full"
                 aria-label="Add to wishlist"
               >
                 <SfIconFavorite size="sm" />
@@ -430,8 +207,8 @@ onMounted(async () => {
           <template #nextButton="defaultProps">
             <SfButton
               v-bind="defaultProps"
-              class="absolute rounded-full! z-5 right-4 bg-white hidden md:block"
-              :class="{ 'hidden!': defaultProps.disabled }"
+              class="absolute !rounded-full z-5 right-4 bg-white hidden md:block"
+              :class="{ '!hidden': defaultProps.disabled }"
               variant="secondary"
               size="lg"
               square
@@ -483,7 +260,7 @@ onMounted(async () => {
       class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6"
     >
       <div
-        v-for="product in products.slice(0, 4)"
+        v-for="product in products"
         :key="product.product_id"
         class="bg-white border border-neutral-200 rounded-xl overflow-hidden hover:shadow-md transition-shadow group"
       >
@@ -511,7 +288,7 @@ onMounted(async () => {
               variant="tertiary"
               square
               size="sm"
-              class="absolute top-2 right-2 bg-white! shadow opacity-0 group-hover:opacity-100 transition-opacity"
+              class="absolute top-2 right-2 !bg-white shadow opacity-0 group-hover:opacity-100 transition-opacity"
             >
               <SfIconFavorite
                 class="text-neutral-500"
@@ -547,18 +324,6 @@ onMounted(async () => {
           />
         </div>
       </div>
-    </div>
-    <div
-      v-if="!loading && !error"
-      class="flex justify-center mt-8"
-    >
-      <SfButton
-        variant="secondary"
-        size="lg"
-        @click="router.push(activeCategory === 'All' ? '/plp' : `/plp?category=${encodeURIComponent(activeCategory)}`)"
-      >
-        View All Products
-      </SfButton>
     </div>
   </section>
 </template>
