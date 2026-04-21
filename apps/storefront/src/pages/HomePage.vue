@@ -13,10 +13,10 @@ import {
   SfIconSearch,
   SfIconMenu,
   SfIconPerson,
-  SfLink,
   SfIconChevronLeft,
   SfIconChevronRight,
   SfScrollable,
+  SfIconClose
 } from '@storefront-ui/vue'
 import CartDrawer from '../components/CartDrawer.vue'
 import { useCart } from '../modules/cart/useCart'
@@ -53,6 +53,7 @@ const activeCategory = ref('All')
 const loading = ref(true)
 const error = ref('')
 const rawProducts = ref<ApiProduct[]>([])
+const mobileSearchOpen = ref(false)
 
 const categories = computed(() => {
   const unique = [...new Set(rawProducts.value.map((p) => p.category))]
@@ -71,6 +72,23 @@ const products = computed(() => {
       reviewCount: p.rating.count,
       image: p.image,
       badge: null,
+    }))
+})
+const searchResults = computed(() => {
+  const query = searchQuery.value.trim().toLowerCase()
+  if (!query) return []
+  return rawProducts.value
+    .filter((p) =>
+      p.name.toLowerCase().includes(query) ||
+      p.category.toLowerCase().includes(query)
+    )
+    .slice(0, 6)
+    .map((p) => ({
+      product_id: Number(p.id),
+      name: p.name,
+      price: +(p.priceCents / 100).toFixed(2),
+      image: p.image,
+      category: p.category,
     }))
 })
 
@@ -106,7 +124,7 @@ onMounted(async () => {
         class="text-xl font-bold text-primary-700 shrink-0"
       >ShopVue</a>
 
-      <div class="flex-1 hidden md:block max-w-xl">
+      <div class="flex-1 hidden md:block max-w-xl relative">
         <SfInput
           v-model="searchQuery"
           placeholder="Search products..."
@@ -116,12 +134,49 @@ onMounted(async () => {
             <SfIconSearch class="text-neutral-500" />
           </template>
         </SfInput>
+
+        <!-- Search Results Dropdown -->
+        <div
+          v-if="searchResults.length > 0"
+          class="absolute top-full left-0 right-0 mt-1 bg-white border border-neutral-200 rounded-xl shadow-xl z-50 overflow-hidden"
+        >
+          <RouterLink
+            v-for="result in searchResults"
+            :key="result.product_id"
+            :to="`/product/${result.product_id}`"
+            class="flex items-center gap-3 px-4 py-3 hover:bg-neutral-50 transition-colors"
+            @click="searchQuery = ''"
+          >
+            <img
+              :src="result.image"
+              :alt="result.name"
+              class="w-10 h-10 rounded-lg object-cover shrink-0"
+            >
+            <div class="flex-1 min-w-0">
+              <p class="text-sm font-medium text-neutral-800 truncate">
+                {{ result.name }}
+              </p>
+              <p class="text-xs text-neutral-400">
+                {{ result.category }}
+              </p>
+            </div>
+            <span class="text-sm font-semibold text-neutral-900 shrink-0">${{ result.price.toFixed(2) }}</span>
+          </RouterLink>
+          <!-- No results state -->
+          <div
+            v-if="searchResults.length === 0 && searchQuery.trim()"
+            class="px-4 py-6 text-center text-sm text-neutral-400"
+          >
+            No products found for "{{ searchQuery }}"
+          </div>
+        </div>
       </div>
 
       <div class="flex items-center gap-2 ml-auto">
         <SfButton
           variant="tertiary"
           square
+          @click="mobileSearchOpen = !mobileSearchOpen"
         >
           <SfIconSearch class="md:hidden" />
         </SfButton>
@@ -215,6 +270,63 @@ onMounted(async () => {
         </SfButton>
       </div>
     </div>
+    <!-- Mobile Search Bar -->
+    <div
+      v-if="mobileSearchOpen"
+      class="md:hidden px-4 pb-3 border-t border-neutral-100"
+    >
+      <div class="relative">
+        <SfInput
+          v-model="searchQuery"
+          placeholder="Search products..."
+          class="w-full"
+          autofocus
+        >
+          <template #prefix>
+            <SfIconSearch class="text-neutral-500" />
+          </template>
+          <template #suffix>
+            <SfButton
+              variant="tertiary"
+              square
+              size="sm"
+              @click="mobileSearchOpen = false; searchQuery = ''"
+            >
+              <SfIconClose size="sm" />
+            </SfButton>
+          </template>
+        </SfInput>
+
+        <!-- Mobile Search Results Dropdown -->
+        <div
+          v-if="searchResults.length > 0"
+          class="absolute top-full left-0 right-0 mt-1 bg-white border border-neutral-200 rounded-xl shadow-xl z-50 overflow-hidden"
+        >
+          <RouterLink
+            v-for="result in searchResults"
+            :key="result.product_id"
+            :to="`/product/${result.product_id}`"
+            class="flex items-center gap-3 px-4 py-3 hover:bg-neutral-50 transition-colors"
+            @click="searchQuery = ''; mobileSearchOpen = false"
+          >
+            <img
+              :src="result.image"
+              :alt="result.name"
+              class="w-10 h-10 rounded-lg object-cover shrink-0"
+            >
+            <div class="flex-1 min-w-0">
+              <p class="text-sm font-medium text-neutral-800 truncate">
+                {{ result.name }}
+              </p>
+              <p class="text-xs text-neutral-400">
+                {{ result.category }}
+              </p>
+            </div>
+            <span class="text-sm font-semibold text-neutral-900 shrink-0">${{ result.price.toFixed(2) }}</span>
+          </RouterLink>
+        </div>
+      </div>
+    </div>
   </header>
 
   <Carousel v-bind="carouselConfig">
@@ -304,7 +416,7 @@ onMounted(async () => {
           <template #previousButton="defaultProps">
             <SfButton
               v-bind="defaultProps"
-              class="absolute !rounded-full z-10 left-4 bg-white hidden md:block"
+              class="absolute !rounded-full z-5 left-4 bg-white hidden md:block"
               :class="{ '!hidden': defaultProps.disabled }"
               variant="secondary"
               size="lg"
@@ -319,12 +431,17 @@ onMounted(async () => {
             class="first:ms-auto last:me-auto border border-neutral-200 shrink-0 rounded-md hover:shadow-lg w-[148px] lg:w-[192px]"
           >
             <div class="relative">
-              <SfLink
-                href="#"
+              <RouterLink
+                :to="`/product/${product.product_id}`"
                 class="block"
               >
-                <!-- product image placeholder -->
-              </SfLink>
+                <img
+                  :src="product.image"
+                  :alt="product.name"
+                  class="w-full aspect-square object-cover rounded-t-md"
+                  @error="($event.target as HTMLImageElement).src = `https://placehold.co/192x192?text=${encodeURIComponent(product.name.split(' ')[0])}`"
+                >
+              </RouterLink>
               <SfButton
                 variant="tertiary"
                 size="sm"
@@ -336,20 +453,19 @@ onMounted(async () => {
               </SfButton>
             </div>
             <div class="p-2 border-t border-neutral-200 typography-text-sm">
-              <SfLink
-                href="#"
-                variant="secondary"
-                class="no-underline text-xs line-clamp-2"
+              <RouterLink
+                :to="`/product/${product.product_id}`"
+                class="text-xs line-clamp-2 text-neutral-700 hover:text-primary-700 transition-colors"
               >
                 {{ product.name }}
-              </SfLink>
+              </RouterLink>
               <span class="block mt-1 font-bold text-sm">${{ product.price.toFixed(2) }}</span>
             </div>
           </div>
           <template #nextButton="defaultProps">
             <SfButton
               v-bind="defaultProps"
-              class="absolute !rounded-full z-10 right-4 bg-white hidden md:block"
+              class="absolute !rounded-full z-5 right-4 bg-white hidden md:block"
               :class="{ '!hidden': defaultProps.disabled }"
               variant="secondary"
               size="lg"
