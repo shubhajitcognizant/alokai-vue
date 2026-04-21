@@ -25,11 +25,10 @@ async function loadProducts() {
     );
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const data = await res.json();
-    console.log(data, "res");
     products.value = (data as Record<string, unknown>[]).map((p) => ({
       product_id: Number((p.id ?? p.product_id) as number),
       name: p.name as string,
-      price: +((((p.priceCents ?? p.price) as number)) / 100).toFixed(2),
+      price: +(((p.priceCents ?? p.price) as number) / 100).toFixed(2),
       image: p.image as string,
       category: p.category as string,
       description: p.description as string,
