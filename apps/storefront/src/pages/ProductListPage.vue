@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { useRoute } from 'vue-router';
+import { useRoute, RouterLink } from 'vue-router';
 import { ref, computed, onMounted, watch } from 'vue'
 import { useProducts } from '../modules/products/useProducts';
 import { useMeta } from '../composables/useMeta'
@@ -171,14 +171,19 @@ watch(displayProducts, () => { currentPage.value = 1; });
                 :key="product.product_id"
                 class="border border-neutral-200 rounded-lg p-4 flex flex-col gap-1"
               >
-                <img
-                  :src="product.image"
-                  :alt="product.name"
-                  class="w-full h-32 object-cover rounded-md bg-neutral-100"
+                <RouterLink :to="`/product/${product.product_id}`">
+                  <img
+                    :src="product.image"
+                    :alt="product.name"
+                    class="w-full h-32 object-cover rounded-md bg-neutral-100"
+                  >
+                </RouterLink>
+                <RouterLink
+                  :to="`/product/${product.product_id}`"
+                  class="text-sm font-semibold text-center line-clamp-2 mb-2 mt-2 hover:text-primary-700 transition-colors"
                 >
-                <h2 class="text-sm font-semibold text-center line-clamp-2 mb-2 mt-2">
                   {{ product.name }}
-                </h2>
+                </RouterLink>
                 <div class="flex items-center gap-1">
                   <SfRating
                     :value="product.rating"
