@@ -6,7 +6,6 @@ import {
   SfButton,
   SfCounter,
   SfIconChevronLeft,
-  SfIconClose,
   SfListItem,
   SfRadio,
   SfRating,
@@ -113,13 +112,6 @@ const handleShowProducts = () => {
       <div class="text-lg font-semibold">
         Filters
       </div>
-      <button
-        type="button"
-        class="sm:hidden text-neutral-500"
-        aria-label="Close filters panel"
-      >
-        <SfIconClose />
-      </button>
     </div>
     <ul>
       <!-- prettier-ignore-attribute -->
@@ -207,7 +199,7 @@ const handleShowProducts = () => {
                 :key="id"
                 tag="label"
                 size="sm"
-                class="!items-center py-4 md:py-1 px-1.5 bg-transparent hover:bg-transparent"
+                class="items-center! py-4 md:py-1 px-1.5 bg-transparent hover:bg-transparent"
               >
                 <template #prefix>
                   <SfRadio
