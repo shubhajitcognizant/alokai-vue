@@ -20,6 +20,8 @@
     "cleancode:fix": "eslint \"apps/**/*.{ts,vue}\" --fix && stylelint \"apps/**/*.{css,vue}\" --fix"
   },
   "dependencies": {
+    "@stripe/stripe-js": "^5.0.0",
+    "firebase": "^11.0.0",
     "vue": "^3.5.30",
     "vue-router": "^5.0.4",
     "vue3-carousel": "^0.17.0"

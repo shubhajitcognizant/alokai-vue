@@ -41,27 +41,36 @@ import {
   SfIconShoppingCart,
 } from '@storefront-ui/vue'
 
-// Import our shared cart store composable.
-// Destructure only the pieces this component needs.
+import { ref, computed } from 'vue'
 import { useCart } from '../modules/cart/useCart'
 import { useRouter } from 'vue-router'
 import { useAuth } from '../modules/auth/useAuth'
+import { usePromo } from '../composables/usePromo'
 
 const { items, isOpen, removeItem, updateQty, subtotal, savings } = useCart()
 const { isLoggedIn } = useAuth()
 const router = useRouter()
+const { appliedCode, promoDescription, calcDiscount, applyCode, removeCode } = usePromo()
 
-/**
- * total() — A simple function (not computed) since it's just a formatted
- * version of subtotal. In this project shipping is always free, so total === subtotal.
- * `.toFixed(2)` returns a string like "12.50", and `+` converts it back to a number.
- */
-const total = () => +(subtotal.value).toFixed(2)
+const promoInput = ref('')
+const promoError = ref('')
+const promoSuccess = ref('')
+
+function handleApplyPromo() {
+  promoError.value = ''
+  promoSuccess.value = ''
+  const result = applyCode(promoInput.value)
+  if (result.success) { promoSuccess.value = result.message; promoInput.value = '' }
+  else promoError.value = result.message
+}
+
+const promoDiscount = computed(() => calcDiscount(subtotal.value))
+const total = () => +(subtotal.value - promoDiscount.value).toFixed(2)
 
 function handleCheckout() {
   isOpen.value = false
   if (isLoggedIn.value) {
-    router.push('')
+    router.push('/checkout')
   } else {
     router.push('/login')
   }
@@ -83,7 +92,7 @@ function handleCheckout() {
   <SfDrawer
     v-model="isOpen"
     placement="right"
-    class="w-full max-w-md bg-white flex flex-col"
+    class="w-full max-w-md bg-white flex flex-col z-50"
   >
     <!-- ── HEADER ─────────────────────────────────── -->
     <div class="flex items-center justify-between px-4 py-4 border-b border-neutral-200">
@@ -264,17 +273,66 @@ function handleCheckout() {
           <span class="text-green-600">Free</span>
         </div>
 
+        <!-- Promo code -->
+        <div>
+          <div
+            v-if="appliedCode"
+            class="flex items-center justify-between bg-green-50 border border-green-200 rounded-lg px-3 py-2 text-sm"
+          >
+            <span class="text-green-700 font-medium">{{ promoDescription }}</span>
+            <button
+              class="text-xs text-neutral-400 hover:text-red-500 ml-2"
+              @click="removeCode"
+            >
+              Remove
+            </button>
+          </div>
+          <form
+            v-else
+            class="flex gap-2"
+            @submit.prevent="handleApplyPromo"
+          >
+            <input
+              v-model="promoInput"
+              placeholder="Promo code"
+              class="flex-1 text-sm px-3 py-2 rounded-lg border border-neutral-300 outline-none focus:ring-2 focus:ring-primary-700 uppercase"
+            >
+            <button
+              type="submit"
+              class="text-sm font-semibold px-3 py-2 rounded-lg border border-neutral-300 hover:bg-neutral-50 transition-colors"
+            >
+              Apply
+            </button>
+          </form>
+          <p
+            v-if="promoError"
+            class="text-xs text-red-500 mt-1"
+          >
+            {{ promoError }}
+          </p>
+          <p
+            v-if="promoSuccess"
+            class="text-xs text-green-600 mt-1"
+          >
+            ✓ {{ promoSuccess }}
+          </p>
+        </div>
+
+        <!-- Promo discount row -->
+        <div
+          v-if="appliedCode && promoDiscount > 0"
+          class="flex justify-between text-sm text-green-600"
+        >
+          <span>Promo ({{ appliedCode }})</span>
+          <span>-${{ promoDiscount.toFixed(2) }}</span>
+        </div>
+
         <!-- Total row -->
         <div class="flex justify-between font-bold text-neutral-900 text-base pt-2 border-t border-neutral-200">
           <span>Total</span>
-          <!--
-            We call total() as a function (with parentheses) because it's a regular function,
-            not a computed ref. A computed ref would be accessed as just `total` (no parentheses).
-          -->
           <span>${{ total().toFixed(2) }}</span>
         </div>
 
-        <!-- Primary CTA button -->
         <SfButton
           class="w-full mt-2"
           size="lg"
@@ -283,7 +341,14 @@ function handleCheckout() {
           Proceed to Checkout
         </SfButton>
 
-        <!-- Secondary action -->
+        <SfButton
+          variant="secondary"
+          class="w-full"
+          @click="isOpen = false; router.push('/cart')"
+        >
+          View Cart
+        </SfButton>
+
         <SfButton
           variant="tertiary"
           class="w-full"

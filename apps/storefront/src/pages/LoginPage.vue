@@ -1,28 +1,41 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
+import { ref, computed, onMounted } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { SfButton, SfInput, SfIconPerson, SfLoaderCircular } from '@storefront-ui/vue'
 import { useAuth } from '../modules/auth/useAuth'
+import { useMeta } from '../composables/useMeta'
 
+useMeta({ title: 'Login', description: 'Sign in to your ShopVue account.' })
+
+const route  = useRoute()
+const router = useRouter()
 const { loginError, loginLoading, login, loginAsGuest } = useAuth()
+
+const redirectTo = computed(() => {
+  const r = route.query.redirect as string | undefined
+  return r && r.startsWith('/') ? r : '/'
+})
 
 onMounted(() => {
   loginError.value = ''
 })
 
-const router = useRouter()
-
-const email = ref('')
+const email    = ref('')
 const password = ref('')
 
 async function handleSubmit() {
   const success = await login(email.value, password.value)
-  if (success) router.push('/')
+  if (success) router.push(redirectTo.value)
 }
 
 function handleGuestCheckout() {
   loginAsGuest()
-  router.push('/')
+  router.push(redirectTo.value)
+}
+
+function goToSignup() {
+  const query = redirectTo.value !== '/' ? { redirect: redirectTo.value } : {}
+  router.push({ path: '/signup', query })
 }
 </script>
 
@@ -89,6 +102,20 @@ function handleGuestCheckout() {
         >
           Back to Shop
         </SfButton>
+
+        <div class="flex items-center justify-between text-sm">
+          <span class="text-neutral-500">
+            Don't have an account?
+            <a
+              class="text-primary-700 font-medium hover:underline cursor-pointer"
+              @click="goToSignup"
+            >Sign up</a>
+          </span>
+          <a
+            class="text-primary-700 font-medium hover:underline cursor-pointer"
+            @click="router.push('/forgot-password')"
+          >Forgot password?</a>
+        </div>
       </form>
 
       <!-- Divider -->

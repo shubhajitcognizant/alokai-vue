@@ -1,29 +1,23 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
-import { RouterLink } from 'vue-router'
+import { RouterLink, useRouter } from 'vue-router'
+import { useMeta } from '../composables/useMeta'
+
+useMeta({ title: 'Home', description: 'Shop the best products at ShopVue — free shipping on orders over $50.' })
 import {
   SfButton,
-  SfBadge,
-  SfInput,
   SfRating,
   SfChip,
   SfLoaderCircular,
-  SfIconShoppingCart,
   SfIconFavorite,
-  SfIconSearch,
-  SfIconMenu,
-  SfIconPerson,
-  SfLink,
   SfIconChevronLeft,
   SfIconChevronRight,
   SfScrollable,
 } from '@storefront-ui/vue'
-import CartDrawer from '../components/CartDrawer.vue'
-import { useCart } from '../modules/cart/useCart'
-import { useRouter } from 'vue-router'
-import { useAuth } from '../modules/auth/useAuth'
 import 'vue3-carousel/carousel.css'
 import { Carousel, Slide, Pagination, Navigation } from 'vue3-carousel'
+import AddToCartButton from '../components/AddToCartButton.vue'
+
 
 interface ApiProduct {
   id: string
@@ -42,15 +36,12 @@ const carouselConfig = {
   wrapAround: true
 }
 
-const { isOpen, addItem, count: cartCount } = useCart()
-const router = useRouter()
-const { isLoggedIn, currentUser, logout } = useAuth()
-
-const searchQuery = ref('')
 const activeCategory = ref('All')
 const loading = ref(true)
 const error = ref('')
 const rawProducts = ref<ApiProduct[]>([])
+const router = useRouter()
+
 
 const categories = computed(() => {
   const unique = [...new Set(rawProducts.value.map((p) => p.category))]
@@ -71,18 +62,6 @@ const products = computed(() => {
       badge: null,
     }))
 })
-
-function handleAddToCart(product: (typeof products.value)[0]) {
-  addItem({
-    product_id: product.product_id,
-    name: product.name,
-    price: product.price,
-    originalPrice: product.originalPrice,
-    image: product.image,
-  })
-  isOpen.value = true
-}
-
 onMounted(async () => {
   try {
     const res = await fetch('https://kolzsticks.github.io/Free-Ecommerce-Products-Api/main/products.json')
@@ -97,174 +76,56 @@ onMounted(async () => {
 </script>
 
 <template>
-  <CartDrawer />
-
-  <!-- NAVBAR -->
-  <header class="sticky top-0 z-10 bg-white shadow-sm">
-    <div class="max-w-7xl mx-auto px-4 flex items-center gap-4 h-16">
-      <SfButton
-        variant="tertiary"
-        square
-        class="md:hidden"
-      >
-        <SfIconMenu />
-      </SfButton>
-
-      <a
-        href="/"
-        class="text-xl font-bold text-primary-700 shrink-0"
-      >ShopVue</a>
-
-      <div class="flex-1 hidden md:block max-w-xl">
-        <SfInput
-          v-model="searchQuery"
-          placeholder="Search products..."
-          class="w-full"
-        >
-          <template #prefix>
-            <SfIconSearch class="text-neutral-500" />
-          </template>
-        </SfInput>
-      </div>
-
-      <div class="flex items-center gap-2 ml-auto">
-        <SfButton
-          variant="tertiary"
-          square
-        >
-          <SfIconSearch class="md:hidden" />
-        </SfButton>
-
-        <div
-          v-if="isLoggedIn"
-          class="relative group"
-        >
-          <SfButton
-            variant="tertiary"
-            square
-          >
-            <SfIconPerson class="text-primary-700" />
-          </SfButton>
-
-          <!-- User dropdown -->
-          <div class="absolute right-0 top-full mt-1 w-48 bg-white rounded-xl shadow-lg border border-neutral-100 overflow-hidden opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-20">
-            <div class="px-4 py-3 border-b border-neutral-100">
-              <p class="text-xs text-neutral-400">
-                Logged in as
-              </p>
-              <p class="text-sm font-semibold text-neutral-800 truncate">
-                {{ currentUser?.username }}
-              </p>
-            </div>
-            <SfButton
-              variant="tertiary"
-              class="w-full !justify-start !text-red-500 hover:!bg-red-50"
-              @click="logout"
-            >
-              Logout
-            </SfButton>
-          </div>
-        </div>
-        <div
-          v-else
-          class="relative group"
-        >
-          <SfButton
-            variant="tertiary"
-            square
-          >
-            <SfIconPerson />
-          </SfButton>
-
-          <!-- Guest dropdown -->
-          <div class="absolute right-0 top-full mt-1 w-48 bg-white rounded-xl shadow-lg border border-neutral-100 overflow-hidden opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-20">
-            <SfButton
-              variant="tertiary"
-              class="w-full !justify-start"
-              @click="router.push('/login')"
-            >
-              Login
-            </SfButton>
-            <SfButton
-              variant="tertiary"
-              class="w-full !justify-start"
-              @click="router.push('/signup')"
-            >
-              Sign Up
-            </SfButton>
-          </div>
-        </div>
-
-        <SfButton
-          variant="tertiary"
-          square
-          class="relative"
-          @click="isOpen = true"
-        >
-          <SfIconShoppingCart />
-          <SfBadge
-            v-if="cartCount > 0"
-            :content="cartCount"
-            class="!bg-primary-700 outline outline-white outline-2 absolute -top-1 -right-1"
-          />
-        </SfButton>
-      </div>
-    </div>
-  </header>
-
   <Carousel v-bind="carouselConfig">
     <Slide
       v-for="slide in 10"
       :key="slide"
     >
-      <div class="carousel__item">
-        {{ slide }}
-      </div>
+      <!-- START OF HERO BANNER -->
+      <section class="w-full bg-primary-700 text-white">
+        <div class="max-w-7xl mx-auto px-4 py-16 md:py-24 flex flex-col md:flex-row items-center gap-8">
+          <div class="flex-1 text-center md:text-left">
+            <p class="text-primary-200 text-sm font-medium uppercase tracking-widest mb-3">
+              New Season Arrivals
+            </p>
+            <h1 class="text-4xl md:text-5xl font-bold leading-tight mb-4">
+              Discover the <br>Latest Trends
+            </h1>
+            <p class="text-primary-100 text-lg mb-8">
+              Shop thousands of products at unbeatable prices. Free shipping on orders over $50.
+            </p>
+            <div class="flex gap-3 justify-center md:justify-start">
+              <SfButton
+                size="lg"
+                class="!bg-white !text-primary-700 hover:!bg-primary-50"
+              >
+                Shop Now
+              </SfButton>
+              <SfButton
+                size="lg"
+                variant="secondary"
+                class="!border-white !text-white hover:!bg-primary-600"
+              >
+                Learn More
+              </SfButton>
+            </div>
+          </div>
+          <div class="flex-1 flex justify-center">
+            <img
+              src="https://placehold.co/480x320?text=Hero+Banner"
+              alt="Hero Banner"
+              class="rounded-2xl shadow-xl max-w-sm w-full"
+            >
+          </div>
+        </div>
+      </section>
+      <!-- END OF HERO BANNER -->
     </Slide>
     <template #addons>
       <Navigation />
       <Pagination />
     </template>
   </Carousel>
-
-  <!-- HERO BANNER -->
-  <section class="bg-primary-700 text-white">
-    <div class="max-w-7xl mx-auto px-4 py-16 md:py-24 flex flex-col md:flex-row items-center gap-8">
-      <div class="flex-1 text-center md:text-left">
-        <p class="text-primary-200 text-sm font-medium uppercase tracking-widest mb-3">
-          New Season Arrivals
-        </p>
-        <h1 class="text-4xl md:text-5xl font-bold leading-tight mb-4">
-          Discover the <br>Latest Trends
-        </h1>
-        <p class="text-primary-100 text-lg mb-8">
-          Shop thousands of products at unbeatable prices. Free shipping on orders over $50.
-        </p>
-        <div class="flex gap-3 justify-center md:justify-start">
-          <SfButton
-            size="lg"
-            class="!bg-white !text-primary-700 hover:!bg-primary-50"
-          >
-            Shop Now
-          </SfButton>
-          <SfButton
-            size="lg"
-            variant="secondary"
-            class="!border-white !text-white hover:!bg-primary-600"
-          >
-            Learn More
-          </SfButton>
-        </div>
-      </div>
-      <div class="flex-1 flex justify-center">
-        <img
-          src="https://placehold.co/480x320?text=Hero+Banner"
-          alt="Hero Banner"
-          class="rounded-2xl shadow-xl max-w-sm w-full"
-        >
-      </div>
-    </div>
-  </section>
 
   <!-- HOT ON SALES SLIDER -->
   <section class="max-w-7xl mx-auto px-4 py-8 border-b border-neutral-200 [overflow-x:clip]">
@@ -299,7 +160,7 @@ onMounted(async () => {
           <template #previousButton="defaultProps">
             <SfButton
               v-bind="defaultProps"
-              class="absolute !rounded-full z-10 left-4 bg-white hidden md:block"
+              class="absolute !rounded-full z-5 left-4 bg-white hidden md:block"
               :class="{ '!hidden': defaultProps.disabled }"
               variant="secondary"
               size="lg"
@@ -314,12 +175,17 @@ onMounted(async () => {
             class="first:ms-auto last:me-auto border border-neutral-200 shrink-0 rounded-md hover:shadow-lg w-[148px] lg:w-[192px]"
           >
             <div class="relative">
-              <SfLink
-                href="#"
+              <RouterLink
+                :to="`/product/${product.product_id}`"
                 class="block"
               >
-                <!-- product image placeholder -->
-              </SfLink>
+                <img
+                  :src="product.image"
+                  :alt="product.name"
+                  class="w-full aspect-square object-contain p-4 rounded-t-md"
+                  @error="($event.target as HTMLImageElement).src = `https://placehold.co/192x192?text=${encodeURIComponent(product.name.split(' ')[0])}`"
+                >
+              </RouterLink>
               <SfButton
                 variant="tertiary"
                 size="sm"
@@ -331,20 +197,19 @@ onMounted(async () => {
               </SfButton>
             </div>
             <div class="p-2 border-t border-neutral-200 typography-text-sm">
-              <SfLink
-                href="#"
-                variant="secondary"
-                class="no-underline text-xs line-clamp-2"
+              <RouterLink
+                :to="`/product/${product.product_id}`"
+                class="text-xs line-clamp-2 text-neutral-700 hover:text-primary-700 transition-colors"
               >
                 {{ product.name }}
-              </SfLink>
+              </RouterLink>
               <span class="block mt-1 font-bold text-sm">${{ product.price.toFixed(2) }}</span>
             </div>
           </div>
           <template #nextButton="defaultProps">
             <SfButton
               v-bind="defaultProps"
-              class="absolute !rounded-full z-10 right-4 bg-white hidden md:block"
+              class="absolute !rounded-full z-5 right-4 bg-white hidden md:block"
               :class="{ '!hidden': defaultProps.disabled }"
               variant="secondary"
               size="lg"
@@ -397,7 +262,7 @@ onMounted(async () => {
       class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6"
     >
       <div
-        v-for="product in products"
+        v-for="product in products.slice(0, 4)"
         :key="product.product_id"
         class="bg-white border border-neutral-200 rounded-xl overflow-hidden hover:shadow-md transition-shadow group"
       >
@@ -410,7 +275,7 @@ onMounted(async () => {
             <img
               :src="product.image"
               :alt="product.name"
-              class="w-full aspect-square object-cover"
+              class="w-full aspect-square object-contain p-4"
             >
             <span
               v-if="product.badge"
@@ -455,110 +320,24 @@ onMounted(async () => {
           <div class="flex items-center gap-2 mb-3">
             <span class="font-bold text-neutral-900">${{ product.price.toFixed(2) }}</span>
           </div>
-          <SfButton
+          <AddToCartButton
+            :product="{...product, product_id: product.product_id}"
             size="sm"
-            class="w-full"
-            @click="handleAddToCart(product)"
-          >
-            <template #prefix>
-              <SfIconShoppingCart size="sm" />
-            </template>
-            Add to cart
-          </SfButton>
+          />
         </div>
       </div>
     </div>
+    <div
+      v-if="!loading && !error"
+      class="flex justify-center mt-8"
+    >
+      <SfButton
+        variant="secondary"
+        size="lg"
+        @click="router.push(activeCategory === 'All' ? '/plp' : `/plp?category=${encodeURIComponent(activeCategory)}`)"
+      >
+        View All Products
+      </SfButton>
+    </div>
   </section>
-
-  <!-- FOOTER -->
-  <footer class="bg-neutral-800 text-neutral-300">
-    <div class="max-w-7xl mx-auto px-4 py-12 grid grid-cols-2 md:grid-cols-4 gap-8">
-      <div class="col-span-2 md:col-span-1">
-        <p class="text-white text-lg font-bold mb-2">
-          ShopVue
-        </p>
-        <p class="text-sm">
-          Your one-stop shop for everything you need, delivered fast.
-        </p>
-      </div>
-      <div>
-        <p class="text-white font-semibold mb-3">
-          Shop
-        </p>
-        <ul class="space-y-2 text-sm">
-          <li>
-            <a
-              href="#"
-              class="hover:text-white transition-colors"
-            >New Arrivals</a>
-          </li>
-          <li>
-            <a
-              href="#"
-              class="hover:text-white transition-colors"
-            >Best Sellers</a>
-          </li>
-          <li>
-            <a
-              href="#"
-              class="hover:text-white transition-colors"
-            >Sale</a>
-          </li>
-        </ul>
-      </div>
-      <div>
-        <p class="text-white font-semibold mb-3">
-          Support
-        </p>
-        <ul class="space-y-2 text-sm">
-          <li>
-            <a
-              href="#"
-              class="hover:text-white transition-colors"
-            >FAQ</a>
-          </li>
-          <li>
-            <a
-              href="#"
-              class="hover:text-white transition-colors"
-            >Shipping</a>
-          </li>
-          <li>
-            <a
-              href="#"
-              class="hover:text-white transition-colors"
-            >Returns</a>
-          </li>
-        </ul>
-      </div>
-      <div>
-        <p class="text-white font-semibold mb-3">
-          Company
-        </p>
-        <ul class="space-y-2 text-sm">
-          <li>
-            <a
-              href="#"
-              class="hover:text-white transition-colors"
-            >About Us</a>
-          </li>
-          <li>
-            <a
-              href="#"
-              class="hover:text-white transition-colors"
-            >Careers</a>
-          </li>
-          <li>
-            <a
-              href="#"
-              class="hover:text-white transition-colors"
-            >Contact</a>
-          </li>
-        </ul>
-      </div>
-    </div>
-    <div class="border-t border-neutral-700 text-center py-4 text-xs text-neutral-500">
-      © 2026 ShopVue. All rights reserved.
-    </div>
-  </footer>
 </template>
