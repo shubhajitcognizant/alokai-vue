@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import { ref, reactive, onMounted } from 'vue'
+import { ref, computed, reactive, onMounted } from 'vue'
 import { useMeta } from '../composables/useMeta'
 
 useMeta({ title: 'My Account', description: 'Manage your account, orders, and saved addresses.' })
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { SfButton, SfLoaderCircular, SfIconPackage } from '@storefront-ui/vue'
 import { useAuth } from '../modules/auth/useAuth'
 import { useCart } from '../modules/cart/useCart'
@@ -13,11 +13,16 @@ import { useSavedAddresses, type SavedAddress } from '../composables/useSavedAdd
 
 type Tab = 'account' | 'orders' | 'address'
 
+const route  = useRoute()
 const router = useRouter()
 const { currentUser, logout } = useAuth()
 const { addItem, isOpen } = useCart()
 
-const activeTab = ref<Tab>('account')
+const activeTab = computed<Tab>(() => {
+  if (route.path === '/account/orders') return 'orders'
+  if (route.path === '/account/address') return 'address'
+  return 'account'
+})
 
 // ── Orders ───────────────────────────────────────────────────────────────────
 interface OrderItem {
@@ -187,11 +192,11 @@ function getInitials(name?: string) {
   return name.split(' ').map((n) => n[0]).join('').toUpperCase().slice(0, 2)
 }
 
-const navItems: { key: Tab | 'logout'; label: string; short: string }[] = [
-  { key: 'account', label: 'MY ACCOUNT', short: 'Account' },
-  { key: 'orders',  label: 'MY ORDERS',  short: 'Orders'  },
-  { key: 'address', label: 'MY ADDRESS', short: 'Address' },
-  { key: 'logout',  label: 'LOG OUT',    short: 'Logout'  },
+const navItems: { key: Tab | 'logout'; label: string; short: string; path?: string }[] = [
+  { key: 'account', label: 'MY ACCOUNT', short: 'Account', path: '/account' },
+  { key: 'orders',  label: 'MY ORDERS',  short: 'Orders',  path: '/account/orders' },
+  { key: 'address', label: 'MY ADDRESS', short: 'Address', path: '/account/address' },
+  { key: 'logout',  label: 'LOG OUT',    short: 'Logout' },
 ]
 </script>
 
@@ -244,7 +249,7 @@ const navItems: { key: Tab | 'logout'; label: string; short: string }[] = [
               :class="activeTab === item.key
                 ? 'text-primary-700 border-primary-700'
                 : 'text-neutral-500 border-transparent hover:text-neutral-800'"
-              @click="activeTab = (item.key as Tab)"
+              @click="router.push(item.path!)"
             >
               <!-- Account -->
               <svg
@@ -326,7 +331,7 @@ const navItems: { key: Tab | 'logout'; label: string; short: string }[] = [
               :class="activeTab === item.key
                 ? 'bg-primary-50 text-primary-700 border-r-2 border-primary-700'
                 : 'text-neutral-600 hover:bg-neutral-50 hover:text-neutral-900'"
-              @click="activeTab = (item.key as Tab)"
+              @click="router.push(item.path!)"
             >
               <svg
                 v-if="item.key === 'account'"
@@ -556,8 +561,15 @@ const navItems: { key: Tab | 'logout'; label: string; short: string }[] = [
                 </div>
               </div>
 
-              <!-- Reorder -->
-              <div class="flex justify-end">
+              <!-- Actions -->
+              <div class="flex justify-end gap-2">
+                <SfButton
+                  variant="secondary"
+                  size="sm"
+                  @click="router.push(`/orders/${order.id}`)"
+                >
+                  View Details
+                </SfButton>
                 <SfButton
                   variant="secondary"
                   size="sm"

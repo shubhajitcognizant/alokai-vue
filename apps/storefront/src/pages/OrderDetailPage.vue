@@ -98,7 +98,7 @@ function reorder() {
   <div class="min-h-screen bg-neutral-50 px-4 py-10">
     <div class="max-w-3xl mx-auto">
       <RouterLink
-        to="/orders"
+        to="/account/orders"
         class="inline-flex items-center gap-1 text-sm text-neutral-500 hover:text-primary-700 mb-6"
       >
         <SfIconChevronLeft size="sm" />
@@ -125,7 +125,7 @@ function reorder() {
         <SfButton
           variant="secondary"
           class="mt-4"
-          @click="router.push('/orders')"
+          @click="router.push('/account/orders')"
         >
           Back to Orders
         </SfButton>
@@ -276,7 +276,7 @@ function reorder() {
           </SfButton>
           <SfButton
             variant="secondary"
-            @click="router.push('/orders')"
+            @click="router.push('/account/orders')"
           >
             Back to Orders
           </SfButton>
