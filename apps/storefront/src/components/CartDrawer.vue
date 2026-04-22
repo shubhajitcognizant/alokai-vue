@@ -41,11 +41,19 @@ import {
   SfIconShoppingCart,
 } from '@storefront-ui/vue'
 
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { useCart } from '../modules/cart/useCart'
 import { useRouter } from 'vue-router'
 import { useAuth } from '../modules/auth/useAuth'
 import { usePromo } from '../composables/usePromo'
+
+interface ApiProduct {
+  id: string
+  name: string
+  priceCents: number
+  image: string
+  category: string
+}
 
 const { items, isOpen, removeItem, updateQty, subtotal, savings } = useCart()
 const { isLoggedIn } = useAuth()
@@ -55,6 +63,92 @@ const { appliedCode, promoDescription, calcDiscount, applyCode, removeCode } = u
 const promoInput = ref('')
 const promoError = ref('')
 const promoSuccess = ref('')
+
+// Complementary product state
+const allProducts = ref<ApiProduct[]>([])
+const complementary = ref<{ product_id: number; name: string; price: number; image: string } | null>(null)
+let productsFetched = false
+
+// Once shown and dismissed/added, never show again for this session
+let suggestionShownOnce = false
+
+async function fetchProducts() {
+  if (productsFetched) return
+  try {
+    const res = await fetch('https://kolzsticks.github.io/Free-Ecommerce-Products-Api/main/products.json')
+    if (res.ok) {
+      allProducts.value = await res.json()
+      productsFetched = true
+    }
+  } catch { /* silent */ }
+}
+
+async function updateComplementary() {
+ 
+  if (suggestionShownOnce) return
+  if (!isOpen.value || items.value.length === 0) {
+    complementary.value = null
+    return
+  }
+
+  await fetchProducts()
+  if (allProducts.value.length === 0) return
+
+  const lastCartItem = items.value[items.value.length - 1]
+  const lastApiProduct = allProducts.value.find(
+    (p) => Number(p.id) === lastCartItem.product_id
+  )
+  if (!lastApiProduct) return
+
+  const category = lastApiProduct.category
+  const cartIds = new Set(items.value.map((i) => i.product_id))
+
+  // Find a match in same category not already in cart
+  const match = allProducts.value.find(
+    (p) => p.category === category && !cartIds.has(Number(p.id))
+  )
+
+  if (match) {
+    complementary.value = {
+      product_id: Number(match.id),
+      name: match.name,
+      price: +(match.priceCents / 100).toFixed(2),
+      image: match.image,
+    }
+  } else {
+    complementary.value = null
+  }
+}
+
+watch(isOpen, (val) => {
+  if (val) updateComplementary()
+})
+
+
+watch(
+  () => items.value.length,
+  (len, prevLen) => {
+    if (len > prevLen) updateComplementary()
+  }
+)
+
+function dismissComplementary() {
+  complementary.value = null
+  suggestionShownOnce = true
+}
+
+function addComplementaryToCart() {
+  if (!complementary.value) return
+  const { addItem } = useCart()
+  addItem({
+    product_id: complementary.value.product_id,
+    name: complementary.value.name,
+    price: complementary.value.price,
+    originalPrice: null,
+    image: complementary.value.image,
+  })
+  dismissComplementary()
+}
 
 function handleApplyPromo() {
   promoError.value = ''
@@ -242,6 +336,50 @@ function handleCheckout() {
                 <SfIconDelete size="sm" />
               </SfButton>
             </div>
+          </div>
+        </li>
+
+        <!-- you may also like section -->
+        <li
+          v-if="complementary"
+          class="py-4"
+        >
+          <div class="flex items-center justify-between mb-3">
+            <p class="text-xs font-semibold text-neutral-500 uppercase tracking-wide">
+              You may also like
+            </p>
+            <button
+              class="text-xs text-neutral-400 hover:text-neutral-600 transition-colors"
+              @click="dismissComplementary"
+            >
+              ✕
+            </button>
+          </div>
+          <div class="flex items-center gap-3 bg-neutral-50 rounded-xl p-3">
+            <div class="w-14 h-14 shrink-0 bg-white rounded-lg overflow-hidden border border-neutral-200">
+              <img
+                :src="complementary.image"
+                :alt="complementary.name"
+                class="w-full h-full object-contain p-1"
+                @error="($event.target as HTMLImageElement).src = `https://placehold.co/56x56?text=${encodeURIComponent(complementary.name.split(' ')[0])}`"
+              >
+            </div>
+            <div class="flex-1 min-w-0">
+              <p class="text-xs font-medium text-neutral-800 line-clamp-2 leading-snug">
+                {{ complementary.name }}
+              </p>
+              <p class="text-sm font-bold text-neutral-900 mt-0.5">
+                ${{ complementary.price.toFixed(2) }}
+              </p>
+            </div>
+            <SfButton
+              size="sm"
+              variant="secondary"
+              class="shrink-0 text-xs"
+              @click="addComplementaryToCart"
+            >
+              + Add
+            </SfButton>
           </div>
         </li>
       </ul>
