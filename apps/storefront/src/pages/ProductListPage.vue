@@ -2,6 +2,9 @@
 import { useRoute } from 'vue-router';
 import { ref, computed, onMounted, watch } from 'vue'
 import { useProducts } from '../modules/products/useProducts';
+import { useMeta } from '../composables/useMeta'
+
+useMeta({ title: 'Shop All Products', description: 'Browse our full catalog of products. Filter by category, price, and rating.' })
 import {
   SfButton,
   SfIconChevronLeft,

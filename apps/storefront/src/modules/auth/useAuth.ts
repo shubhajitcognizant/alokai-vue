@@ -5,6 +5,7 @@ import {
   updateProfile,
   signOut,
   onAuthStateChanged,
+  sendPasswordResetEmail,
   type User,
 } from 'firebase/auth'
 import { doc, setDoc } from 'firebase/firestore'
@@ -104,6 +105,19 @@ async function register(email: string, password: string, username: string): Prom
   }
 }
 
+async function resetPassword(email: string): Promise<{ success: boolean; error?: string }> {
+  try {
+    await sendPasswordResetEmail(auth, email)
+    return { success: true }
+  } catch (err: unknown) {
+    const code = (err as { code?: string }).code
+    if (code === 'auth/user-not-found' || code === 'auth/invalid-email') {
+      return { success: false, error: 'No account found with this email address.' }
+    }
+    return { success: false, error: 'Failed to send reset email. Please try again.' }
+  }
+}
+
 async function logout() {
   await signOut(auth)
   currentUser.value = null
@@ -132,5 +146,6 @@ export function useAuth() {
     register,
     logout,
     loginAsGuest,
+    resetPassword,
   }
 }

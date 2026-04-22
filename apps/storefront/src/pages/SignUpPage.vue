@@ -1,11 +1,20 @@
 <script setup lang="ts">
-import { ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { ref, computed } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { SfButton, SfInput, SfIconPerson, SfLoaderCircular } from '@storefront-ui/vue'
 import { useAuth } from '../modules/auth/useAuth'
+import { useMeta } from '../composables/useMeta'
 
+useMeta({ title: 'Create Account', description: 'Sign up for a ShopVue account and enjoy free shipping on orders over $50.' })
+
+const route  = useRoute()
 const router = useRouter()
 const { register, loginError, loginLoading } = useAuth()
+
+const redirectTo = computed(() => {
+  const r = route.query.redirect as string | undefined
+  return r && r.startsWith('/') ? r : '/'
+})
 
 const username = ref('')
 const email = ref('')
@@ -29,7 +38,7 @@ async function handleSubmit() {
   const ok = await register(email.value, password.value, username.value)
   if (ok) {
     success.value = true
-    setTimeout(() => router.push('/'), 1500)
+    setTimeout(() => router.push(redirectTo.value), 1500)
   } else {
     error.value = loginError.value
   }

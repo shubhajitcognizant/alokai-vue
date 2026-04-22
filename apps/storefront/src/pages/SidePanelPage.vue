@@ -1,19 +1,28 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
+import { ref, computed, reactive, onMounted } from 'vue'
+import { useMeta } from '../composables/useMeta'
+
+useMeta({ title: 'My Account', description: 'Manage your account, orders, and saved addresses.' })
+import { useRoute, useRouter } from 'vue-router'
 import { SfButton, SfLoaderCircular, SfIconPackage } from '@storefront-ui/vue'
 import { useAuth } from '../modules/auth/useAuth'
 import { useCart } from '../modules/cart/useCart'
 import { collection, getDocs, orderBy, query, doc, updateDoc } from 'firebase/firestore'
 import { db } from '../firebase/config'
+import { useSavedAddresses, type SavedAddress } from '../composables/useSavedAddresses'
 
 type Tab = 'account' | 'orders' | 'address'
 
+const route  = useRoute()
 const router = useRouter()
 const { currentUser, logout } = useAuth()
 const { addItem, isOpen } = useCart()
 
-const activeTab = ref<Tab>('account')
+const activeTab = computed<Tab>(() => {
+  if (route.path === '/account/orders') return 'orders'
+  if (route.path === '/account/address') return 'address'
+  return 'account'
+})
 
 // ── Orders ───────────────────────────────────────────────────────────────────
 interface OrderItem {
@@ -84,12 +93,92 @@ async function setRating(order: Order, item: OrderItem, stars: number) {
 }
 
 // ── Address ───────────────────────────────────────────────────────────────────
-const address = ref({ street: '', city: '', state: '', zip: '', country: '' })
-const addressSaved = ref(false)
+const { savedAddresses, addressesLoading, load: loadAddresses, addAddress, updateAddress, deleteAddress, setDefault } = useSavedAddresses()
 
-function saveAddress() {
-  addressSaved.value = true
-  setTimeout(() => { addressSaved.value = false }, 2000)
+const showAddressForm = ref(false)
+const editingAddressId = ref<string | null>(null)
+const addressFormError = ref('')
+const addressSaving = ref(false)
+
+const emptyForm = () => ({
+  label: 'Home',
+  fullName: '',
+  line1: '',
+  line2: '',
+  city: '',
+  state: '',
+  zip: '',
+  country: 'United States',
+  isDefault: false,
+})
+const addressForm = reactive(emptyForm())
+
+onMounted(async () => {
+  if (currentUser.value && !currentUser.value.isGuest) {
+    await loadAddresses(currentUser.value.user_id)
+  }
+})
+
+function openAddForm() {
+  Object.assign(addressForm, emptyForm())
+  addressForm.isDefault = savedAddresses.value.length === 0
+  editingAddressId.value = null
+  addressFormError.value = ''
+  showAddressForm.value = true
+}
+
+function openEditForm(addr: SavedAddress) {
+  Object.assign(addressForm, { ...addr })
+  editingAddressId.value = addr.id
+  addressFormError.value = ''
+  showAddressForm.value = true
+}
+
+function cancelAddressForm() {
+  showAddressForm.value = false
+  editingAddressId.value = null
+}
+
+function validateAddressForm() {
+  if (!addressForm.fullName.trim()) return 'Full name is required'
+  if (!addressForm.line1.trim()) return 'Street address is required'
+  if (!addressForm.city.trim()) return 'City is required'
+  if (!addressForm.state.trim()) return 'State is required'
+  if (!addressForm.zip.trim()) return 'ZIP code is required'
+  if (!addressForm.country.trim()) return 'Country is required'
+  return ''
+}
+
+async function saveAddressForm() {
+  if (!currentUser.value) return
+  const err = validateAddressForm()
+  if (err) { addressFormError.value = err; return }
+  addressSaving.value = true
+  addressFormError.value = ''
+  try {
+    const payload = { ...addressForm }
+    if (editingAddressId.value) {
+      await updateAddress(currentUser.value.user_id, editingAddressId.value, payload)
+    } else {
+      await addAddress(currentUser.value.user_id, payload)
+    }
+    showAddressForm.value = false
+    editingAddressId.value = null
+  } catch {
+    addressFormError.value = 'Failed to save address. Please try again.'
+  } finally {
+    addressSaving.value = false
+  }
+}
+
+async function handleDeleteAddress(id: string) {
+  if (!currentUser.value) return
+  await deleteAddress(currentUser.value.user_id, id)
+}
+
+async function handleSetDefault(id: string) {
+  if (!currentUser.value) return
+  await setDefault(currentUser.value.user_id, id)
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -103,11 +192,11 @@ function getInitials(name?: string) {
   return name.split(' ').map((n) => n[0]).join('').toUpperCase().slice(0, 2)
 }
 
-const navItems: { key: Tab | 'logout'; label: string; short: string }[] = [
-  { key: 'account', label: 'MY ACCOUNT', short: 'Account' },
-  { key: 'orders',  label: 'MY ORDERS',  short: 'Orders'  },
-  { key: 'address', label: 'MY ADDRESS', short: 'Address' },
-  { key: 'logout',  label: 'LOG OUT',    short: 'Logout'  },
+const navItems: { key: Tab | 'logout'; label: string; short: string; path?: string }[] = [
+  { key: 'account', label: 'MY ACCOUNT', short: 'Account', path: '/account' },
+  { key: 'orders',  label: 'MY ORDERS',  short: 'Orders',  path: '/account/orders' },
+  { key: 'address', label: 'MY ADDRESS', short: 'Address', path: '/account/address' },
+  { key: 'logout',  label: 'LOG OUT',    short: 'Logout' },
 ]
 </script>
 
@@ -160,7 +249,7 @@ const navItems: { key: Tab | 'logout'; label: string; short: string }[] = [
               :class="activeTab === item.key
                 ? 'text-primary-700 border-primary-700'
                 : 'text-neutral-500 border-transparent hover:text-neutral-800'"
-              @click="activeTab = (item.key as Tab)"
+              @click="router.push(item.path!)"
             >
               <!-- Account -->
               <svg
@@ -242,7 +331,7 @@ const navItems: { key: Tab | 'logout'; label: string; short: string }[] = [
               :class="activeTab === item.key
                 ? 'bg-primary-50 text-primary-700 border-r-2 border-primary-700'
                 : 'text-neutral-600 hover:bg-neutral-50 hover:text-neutral-900'"
-              @click="activeTab = (item.key as Tab)"
+              @click="router.push(item.path!)"
             >
               <svg
                 v-if="item.key === 'account'"
@@ -472,8 +561,15 @@ const navItems: { key: Tab | 'logout'; label: string; short: string }[] = [
                 </div>
               </div>
 
-              <!-- Reorder -->
-              <div class="flex justify-end">
+              <!-- Actions -->
+              <div class="flex justify-end gap-2">
+                <SfButton
+                  variant="secondary"
+                  size="sm"
+                  @click="router.push(`/orders/${order.id}`)"
+                >
+                  View Details
+                </SfButton>
                 <SfButton
                   variant="secondary"
                   size="sm"
@@ -491,66 +587,253 @@ const navItems: { key: Tab | 'logout'; label: string; short: string }[] = [
           v-else-if="activeTab === 'address'"
           class="bg-white rounded-2xl border border-neutral-200 shadow-sm overflow-hidden"
         >
-          <div class="px-5 py-4 border-b border-neutral-100">
-            <h2 class="text-base font-semibold text-neutral-800">
-              Shipping Address
-            </h2>
-            <p class="text-xs text-neutral-400 mt-0.5">
-              Manage your default delivery address
-            </p>
+          <!-- Header -->
+          <div class="px-5 py-4 border-b border-neutral-100 flex items-center justify-between gap-3">
+            <div>
+              <h2 class="text-base font-semibold text-neutral-800">
+                Saved Addresses
+              </h2>
+              <p class="text-xs text-neutral-400 mt-0.5">
+                Manage your delivery addresses
+              </p>
+            </div>
+            <button
+              v-if="!showAddressForm"
+              class="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-2 rounded-lg bg-primary-700 text-white hover:bg-primary-800 transition-colors shrink-0"
+              @click="openAddForm"
+            >
+              <svg
+                class="w-3.5 h-3.5"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.2"
+                viewBox="0 0 24 24"
+              >
+                <path d="M12 5v14M5 12h14" />
+              </svg>
+              Add Address
+            </button>
           </div>
 
-          <div class="px-5 py-5 grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div class="sm:col-span-2 space-y-1">
-              <label class="text-xs font-medium text-neutral-500 uppercase tracking-wide">Street Address</label>
-              <input
-                v-model="address.street"
-                class="w-full text-sm px-3 py-2.5 rounded-lg border border-neutral-300 outline-none focus:ring-2 focus:ring-primary-700 focus:border-primary-700 text-neutral-900 bg-white"
-                placeholder="123 Main St, Apt 4B"
-              >
+          <!-- Add / Edit Form -->
+          <div
+            v-if="showAddressForm"
+            class="px-5 py-5 border-b border-neutral-100 bg-neutral-50"
+          >
+            <h3 class="text-sm font-semibold text-neutral-700 mb-4">
+              {{ editingAddressId ? 'Edit Address' : 'New Address' }}
+            </h3>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div class="sm:col-span-2 space-y-1">
+                <label class="text-xs font-medium text-neutral-500 uppercase tracking-wide">Label (e.g. Home, Work)</label>
+                <input
+                  v-model="addressForm.label"
+                  class="w-full text-sm px-3 py-2.5 rounded-lg border border-neutral-300 outline-none focus:ring-2 focus:ring-primary-700 focus:border-primary-700 text-neutral-900 bg-white"
+                  placeholder="Home"
+                >
+              </div>
+              <div class="sm:col-span-2 space-y-1">
+                <label class="text-xs font-medium text-neutral-500 uppercase tracking-wide">Full Name *</label>
+                <input
+                  v-model="addressForm.fullName"
+                  class="w-full text-sm px-3 py-2.5 rounded-lg border border-neutral-300 outline-none focus:ring-2 focus:ring-primary-700 focus:border-primary-700 text-neutral-900 bg-white"
+                  placeholder="Jane Smith"
+                >
+              </div>
+              <div class="sm:col-span-2 space-y-1">
+                <label class="text-xs font-medium text-neutral-500 uppercase tracking-wide">Address Line 1 *</label>
+                <input
+                  v-model="addressForm.line1"
+                  class="w-full text-sm px-3 py-2.5 rounded-lg border border-neutral-300 outline-none focus:ring-2 focus:ring-primary-700 focus:border-primary-700 text-neutral-900 bg-white"
+                  placeholder="123 Main Street"
+                >
+              </div>
+              <div class="sm:col-span-2 space-y-1">
+                <label class="text-xs font-medium text-neutral-500 uppercase tracking-wide">Address Line 2 <span class="text-neutral-400 normal-case">(optional)</span></label>
+                <input
+                  v-model="addressForm.line2"
+                  class="w-full text-sm px-3 py-2.5 rounded-lg border border-neutral-300 outline-none focus:ring-2 focus:ring-primary-700 focus:border-primary-700 text-neutral-900 bg-white"
+                  placeholder="Apt, suite, floor…"
+                >
+              </div>
+              <div class="space-y-1">
+                <label class="text-xs font-medium text-neutral-500 uppercase tracking-wide">City *</label>
+                <input
+                  v-model="addressForm.city"
+                  class="w-full text-sm px-3 py-2.5 rounded-lg border border-neutral-300 outline-none focus:ring-2 focus:ring-primary-700 focus:border-primary-700 text-neutral-900 bg-white"
+                  placeholder="New York"
+                >
+              </div>
+              <div class="space-y-1">
+                <label class="text-xs font-medium text-neutral-500 uppercase tracking-wide">State *</label>
+                <input
+                  v-model="addressForm.state"
+                  class="w-full text-sm px-3 py-2.5 rounded-lg border border-neutral-300 outline-none focus:ring-2 focus:ring-primary-700 focus:border-primary-700 text-neutral-900 bg-white"
+                  placeholder="NY"
+                >
+              </div>
+              <div class="space-y-1">
+                <label class="text-xs font-medium text-neutral-500 uppercase tracking-wide">ZIP Code *</label>
+                <input
+                  v-model="addressForm.zip"
+                  class="w-full text-sm px-3 py-2.5 rounded-lg border border-neutral-300 outline-none focus:ring-2 focus:ring-primary-700 focus:border-primary-700 text-neutral-900 bg-white"
+                  placeholder="10001"
+                >
+              </div>
+              <div class="space-y-1">
+                <label class="text-xs font-medium text-neutral-500 uppercase tracking-wide">Country *</label>
+                <input
+                  v-model="addressForm.country"
+                  class="w-full text-sm px-3 py-2.5 rounded-lg border border-neutral-300 outline-none focus:ring-2 focus:ring-primary-700 focus:border-primary-700 text-neutral-900 bg-white"
+                  placeholder="United States"
+                >
+              </div>
+              <div class="sm:col-span-2">
+                <label class="flex items-center gap-2 cursor-pointer">
+                  <input
+                    v-model="addressForm.isDefault"
+                    type="checkbox"
+                    class="w-4 h-4 rounded accent-primary-700"
+                  >
+                  <span class="text-sm text-neutral-600">Set as default address</span>
+                </label>
+              </div>
             </div>
-            <div class="space-y-1">
-              <label class="text-xs font-medium text-neutral-500 uppercase tracking-wide">City</label>
-              <input
-                v-model="address.city"
-                class="w-full text-sm px-3 py-2.5 rounded-lg border border-neutral-300 outline-none focus:ring-2 focus:ring-primary-700 focus:border-primary-700 text-neutral-900 bg-white"
-                placeholder="New York"
+
+            <p
+              v-if="addressFormError"
+              class="text-xs text-red-600 mt-3"
+            >
+              {{ addressFormError }}
+            </p>
+
+            <div class="flex gap-2 mt-4">
+              <SfButton
+                size="sm"
+                :disabled="addressSaving"
+                @click="saveAddressForm"
               >
-            </div>
-            <div class="space-y-1">
-              <label class="text-xs font-medium text-neutral-500 uppercase tracking-wide">State / Province</label>
-              <input
-                v-model="address.state"
-                class="w-full text-sm px-3 py-2.5 rounded-lg border border-neutral-300 outline-none focus:ring-2 focus:ring-primary-700 focus:border-primary-700 text-neutral-900 bg-white"
-                placeholder="NY"
+                {{ addressSaving ? 'Saving…' : editingAddressId ? 'Update Address' : 'Save Address' }}
+              </SfButton>
+              <SfButton
+                variant="secondary"
+                size="sm"
+                @click="cancelAddressForm"
               >
-            </div>
-            <div class="space-y-1">
-              <label class="text-xs font-medium text-neutral-500 uppercase tracking-wide">ZIP / Postal Code</label>
-              <input
-                v-model="address.zip"
-                class="w-full text-sm px-3 py-2.5 rounded-lg border border-neutral-300 outline-none focus:ring-2 focus:ring-primary-700 focus:border-primary-700 text-neutral-900 bg-white"
-                placeholder="10001"
-              >
-            </div>
-            <div class="space-y-1">
-              <label class="text-xs font-medium text-neutral-500 uppercase tracking-wide">Country</label>
-              <input
-                v-model="address.country"
-                class="w-full text-sm px-3 py-2.5 rounded-lg border border-neutral-300 outline-none focus:ring-2 focus:ring-primary-700 focus:border-primary-700 text-neutral-900 bg-white"
-                placeholder="United States"
-              >
+                Cancel
+              </SfButton>
             </div>
           </div>
 
-          <div class="px-5 pb-5 flex flex-wrap items-center gap-3">
-            <SfButton @click="saveAddress">
-              {{ addressSaved ? '✓ Saved!' : 'Save Address' }}
-            </SfButton>
-            <p class="text-xs text-neutral-400">
-              Saved locally for this session.
-            </p>
+          <!-- Loading -->
+          <div
+            v-if="addressesLoading"
+            class="flex justify-center py-12"
+          >
+            <SfLoaderCircular size="lg" />
           </div>
+
+          <!-- Empty state -->
+          <div
+            v-else-if="!showAddressForm && savedAddresses.length === 0"
+            class="flex flex-col items-center gap-3 py-12 text-neutral-400 px-5"
+          >
+            <svg
+              class="w-10 h-10 text-neutral-300"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.4"
+              viewBox="0 0 24 24"
+            >
+              <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" /><circle
+                cx="12"
+                cy="9"
+                r="2.5"
+              />
+            </svg>
+            <p class="text-sm font-medium">
+              No saved addresses yet
+            </p>
+            <button
+              class="text-sm text-primary-700 font-semibold hover:underline"
+              @click="openAddForm"
+            >
+              Add your first address
+            </button>
+          </div>
+
+          <!-- Address cards -->
+          <ul
+            v-else-if="!addressesLoading && savedAddresses.length > 0"
+            class="divide-y divide-neutral-100"
+          >
+            <li
+              v-for="addr in savedAddresses"
+              :key="addr.id"
+              class="px-5 py-4 flex items-start gap-4"
+            >
+              <!-- Pin icon -->
+              <div class="mt-0.5 shrink-0 w-8 h-8 rounded-lg bg-primary-50 flex items-center justify-center">
+                <svg
+                  class="w-4 h-4 text-primary-700"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.8"
+                  viewBox="0 0 24 24"
+                >
+                  <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" /><circle
+                    cx="12"
+                    cy="9"
+                    r="2.5"
+                  />
+                </svg>
+              </div>
+
+              <!-- Details -->
+              <div class="flex-1 min-w-0">
+                <div class="flex items-center gap-2 flex-wrap mb-0.5">
+                  <span class="text-sm font-semibold text-neutral-800">{{ addr.label }}</span>
+                  <span
+                    v-if="addr.isDefault"
+                    class="text-xs font-semibold px-2 py-0.5 rounded-full bg-green-100 text-green-700"
+                  >Default</span>
+                </div>
+                <p class="text-sm text-neutral-700">
+                  {{ addr.fullName }}
+                </p>
+                <p class="text-xs text-neutral-500 mt-0.5">
+                  {{ addr.line1 }}{{ addr.line2 ? ', ' + addr.line2 : '' }}
+                </p>
+                <p class="text-xs text-neutral-500">
+                  {{ addr.city }}, {{ addr.state }} {{ addr.zip }}, {{ addr.country }}
+                </p>
+              </div>
+
+              <!-- Actions -->
+              <div class="flex flex-col gap-1 shrink-0">
+                <button
+                  class="text-xs text-primary-700 font-medium hover:underline text-right"
+                  @click="openEditForm(addr)"
+                >
+                  Edit
+                </button>
+                <button
+                  class="text-xs text-red-500 font-medium hover:underline text-right"
+                  @click="handleDeleteAddress(addr.id)"
+                >
+                  Delete
+                </button>
+                <button
+                  v-if="!addr.isDefault"
+                  class="text-xs text-neutral-500 hover:text-neutral-800 font-medium hover:underline text-right"
+                  @click="handleSetDefault(addr.id)"
+                >
+                  Set default
+                </button>
+              </div>
+            </li>
+          </ul>
         </div>
       </div>
     </div>
