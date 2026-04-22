@@ -13,6 +13,7 @@ import {
 } from '@storefront-ui/vue'
 import { useAuth } from '../modules/auth/useAuth'
 import { useCart } from '../modules/cart/useCart'
+import { useWishlist } from '../composables/useWishlist'
 
 interface ApiProduct {
   id: string
@@ -25,6 +26,7 @@ interface ApiProduct {
 const router = useRouter()
 const { currentUser, isLoggedIn, logout } = useAuth()
 const { count: cartCount, isOpen } = useCart()
+const { count: wishlistCount } = useWishlist()
 
 const searchQuery = ref('')
 const isMobileMenuOpen = ref(false)
@@ -56,6 +58,14 @@ const searchResults = computed(() => {
       category: p.category,
     }))
 })
+
+function submitSearch() {
+  const q = searchQuery.value.trim()
+  if (!q) return
+  searchQuery.value = ''
+  mobileSearchOpen.value = false
+  router.push({ path: '/search', query: { q } })
+}
 
 onMounted(async () => {
   try {
@@ -112,15 +122,20 @@ onMounted(async () => {
 
       <!-- Desktop search bar -->
       <div class="flex-1 hidden md:block max-w-xl ml-auto relative">
-        <SfInput
-          v-model="searchQuery"
-          placeholder="Search products..."
-          class="w-full"
-        >
-          <template #prefix>
-            <SfIconSearch class="text-neutral-500" />
-          </template>
-        </SfInput>
+        <form @submit.prevent="submitSearch">
+          <SfInput
+            v-model="searchQuery"
+            placeholder="Search products..."
+            class="w-full"
+          >
+            <template #prefix>
+              <SfIconSearch
+                class="text-neutral-500 cursor-pointer"
+                @click="submitSearch"
+              />
+            </template>
+          </SfInput>
+        </form>
 
         <!-- Desktop search dropdown -->
         <div
@@ -207,6 +222,13 @@ onMounted(async () => {
               </SfButton>
               <SfButton
                 variant="tertiary"
+                class="w-full !justify-start text-sm"
+                @click="userMenuOpen = false; router.push('/wishlist')"
+              >
+                Wishlist
+              </SfButton>
+              <SfButton
+                variant="tertiary"
                 class="w-full !justify-start !text-red-500 hover:!bg-red-50 text-sm"
                 @click="userMenuOpen = false; logout()"
               >
@@ -232,6 +254,35 @@ onMounted(async () => {
           </div>
         </div>
 
+        <!-- Wishlist -->
+        <SfButton
+          v-if="isLoggedIn"
+          variant="tertiary"
+          square
+          class="relative"
+          aria-label="Wishlist"
+          @click="router.push('/wishlist')"
+        >
+          <svg
+            class="w-5 h-5"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.8"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
+            />
+          </svg>
+          <SfBadge
+            v-if="wishlistCount > 0"
+            :content="wishlistCount"
+            class="!bg-red-500 outline outline-white outline-2 absolute -top-1 -right-1"
+          />
+        </SfButton>
+
         <!-- Cart -->
         <SfButton
           variant="tertiary"
@@ -255,55 +306,57 @@ onMounted(async () => {
       class="md:hidden px-4 pb-3 border-t border-neutral-100"
     >
       <div class="relative">
-        <SfInput
-          v-model="searchQuery"
-          placeholder="Search products..."
-          class="w-full"
-          autofocus
-        >
-          <template #prefix>
-            <SfIconSearch class="text-neutral-500" />
-          </template>
-          <template #suffix>
-            <SfButton
-              variant="tertiary"
-              square
-              size="sm"
-              @click="mobileSearchOpen = false; searchQuery = ''"
-            >
-              <SfIconClose size="sm" />
-            </SfButton>
-          </template>
-        </SfInput>
-
-        <!-- Mobile search dropdown -->
-        <div
-          v-if="searchResults.length > 0"
-          class="absolute top-full left-0 right-0 mt-1 bg-white border border-neutral-200 rounded-xl shadow-xl z-50 overflow-hidden"
-        >
-          <RouterLink
-            v-for="result in searchResults"
-            :key="result.product_id"
-            :to="`/product/${result.product_id}`"
-            class="flex items-center gap-3 px-4 py-3 hover:bg-neutral-50 transition-colors"
-            @click="searchQuery = ''; mobileSearchOpen = false"
+        <form @submit.prevent="submitSearch">
+          <SfInput
+            v-model="searchQuery"
+            placeholder="Search products..."
+            class="w-full"
+            autofocus
           >
-            <img
-              :src="result.image"
-              :alt="result.name"
-              class="w-10 h-10 rounded-lg object-cover shrink-0"
+            <template #prefix>
+              <SfIconSearch class="text-neutral-500" />
+            </template>
+            <template #suffix>
+              <SfButton
+                variant="tertiary"
+                square
+                size="sm"
+                @click="mobileSearchOpen = false; searchQuery = ''"
+              >
+                <SfIconClose size="sm" />
+              </SfButton>
+            </template>
+          </SfInput>
+
+          <!-- Mobile search dropdown -->
+          <div
+            v-if="searchResults.length > 0"
+            class="absolute top-full left-0 right-0 mt-1 bg-white border border-neutral-200 rounded-xl shadow-xl z-50 overflow-hidden"
+          >
+            <RouterLink
+              v-for="result in searchResults"
+              :key="result.product_id"
+              :to="`/product/${result.product_id}`"
+              class="flex items-center gap-3 px-4 py-3 hover:bg-neutral-50 transition-colors"
+              @click="searchQuery = ''; mobileSearchOpen = false"
             >
-            <div class="flex-1 min-w-0">
-              <p class="text-sm font-medium text-neutral-800 truncate">
-                {{ result.name }}
-              </p>
-              <p class="text-xs text-neutral-400">
-                {{ result.category }}
-              </p>
-            </div>
-            <span class="text-sm font-semibold text-neutral-900 shrink-0">${{ result.price.toFixed(2) }}</span>
-          </RouterLink>
-        </div>
+              <img
+                :src="result.image"
+                :alt="result.name"
+                class="w-10 h-10 rounded-lg object-cover shrink-0"
+              >
+              <div class="flex-1 min-w-0">
+                <p class="text-sm font-medium text-neutral-800 truncate">
+                  {{ result.name }}
+                </p>
+                <p class="text-xs text-neutral-400">
+                  {{ result.category }}
+                </p>
+              </div>
+              <span class="text-sm font-semibold text-neutral-900 shrink-0">${{ result.price.toFixed(2) }}</span>
+            </RouterLink>
+          </div>
+        </form>
       </div>
     </div>
 

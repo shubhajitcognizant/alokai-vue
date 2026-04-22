@@ -1,6 +1,27 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { useRouter, RouterLink } from 'vue-router'
+import { useMeta } from '../composables/useMeta'
+import { usePromo } from '../composables/usePromo'
+
+useMeta({ title: 'Shopping Cart', description: 'Review your cart and proceed to checkout.' })
+
+const { appliedCode, promoDescription, calcDiscount, applyCode, removeCode } = usePromo()
+const promoInput = ref('')
+const promoError = ref('')
+const promoSuccess = ref('')
+
+function handleApplyPromo() {
+  promoError.value = ''
+  promoSuccess.value = ''
+  const result = applyCode(promoInput.value)
+  if (result.success) {
+    promoSuccess.value = result.message
+    promoInput.value = ''
+  } else {
+    promoError.value = result.message
+  }
+}
 import {
   SfButton,
   SfIconAdd,
@@ -16,7 +37,8 @@ const router = useRouter()
 const { items, removeItem, updateQty, subtotal, savings } = useCart()
 const { isLoggedIn } = useAuth()
 
-const total = computed(() => +(subtotal.value).toFixed(2))
+const promoDiscount = computed(() => calcDiscount(subtotal.value))
+const total = computed(() => +(subtotal.value - promoDiscount.value).toFixed(2))
 
 function handleCheckout() {
   if (isLoggedIn.value) {
@@ -167,6 +189,61 @@ function handleCheckout() {
           <div class="flex justify-between text-sm text-neutral-600">
             <span>Shipping</span>
             <span class="text-green-600">Free</span>
+          </div>
+
+          <!-- Promo code input -->
+          <div class="pt-1">
+            <div
+              v-if="appliedCode"
+              class="flex items-center justify-between bg-green-50 border border-green-200 rounded-lg px-3 py-2 text-sm"
+            >
+              <span class="text-green-700 font-medium">{{ promoDescription }}</span>
+              <button
+                class="text-xs text-neutral-400 hover:text-red-500 ml-2"
+                @click="removeCode"
+              >
+                Remove
+              </button>
+            </div>
+            <form
+              v-else
+              class="flex gap-2"
+              @submit.prevent="handleApplyPromo"
+            >
+              <input
+                v-model="promoInput"
+                placeholder="Promo code"
+                class="flex-1 text-sm px-3 py-2 rounded-lg border border-neutral-300 outline-none focus:ring-2 focus:ring-primary-700 focus:border-primary-700 uppercase"
+              >
+              <SfButton
+                type="submit"
+                size="sm"
+                variant="secondary"
+              >
+                Apply
+              </SfButton>
+            </form>
+            <p
+              v-if="promoError"
+              class="text-xs text-red-500 mt-1"
+            >
+              {{ promoError }}
+            </p>
+            <p
+              v-if="promoSuccess"
+              class="text-xs text-green-600 mt-1"
+            >
+              ✓ {{ promoSuccess }}
+            </p>
+          </div>
+
+          <!-- Promo discount row -->
+          <div
+            v-if="appliedCode && promoDiscount > 0"
+            class="flex justify-between text-sm text-green-600"
+          >
+            <span>Promo ({{ appliedCode }})</span>
+            <span>-${{ promoDiscount.toFixed(2) }}</span>
           </div>
 
           <div class="flex justify-between font-bold text-neutral-900 text-base pt-3 border-t border-neutral-200">

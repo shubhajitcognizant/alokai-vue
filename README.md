@@ -12,8 +12,8 @@ A learning-focused e-commerce storefront built with **Vue 3**, **TypeScript**, *
 - **Storefront UI v3** — pre-built, accessible e-commerce components (`SfButton`, `SfDrawer`, `SfRating`, `SfChip`, and more)
 - **Vue Router** — client-side routing with auth guards and protected routes
 - **Composable Pattern** — shared reactive state across components without Pinia
-- **Firebase Auth** — email/password sign-up, login, logout, and guest mode
-- **Firestore** — real-time cart and order persistence per user
+- **Firebase Auth** — email/password sign-up, login, logout, guest mode, and password reset
+- **Firestore** — real-time cart, order, address, and wishlist persistence per user
 - **Stripe Payments** — card payment flow via PaymentIntents (test mode)
 - **REST API Integration** — fetching products from a public mock API via Express middleware
 - **Component Architecture** — splitting UI into focused, reusable `.vue` files
@@ -22,6 +22,7 @@ A learning-focused e-commerce storefront built with **Vue 3**, **TypeScript**, *
 
 ## Features
 
+### Core Shopping
 - Product listing with live data from a public API
 - Product detail page with image, description, ratings, and add-to-cart
 - Category filter chips (auto-generated from API data)
@@ -29,16 +30,82 @@ A learning-focused e-commerce storefront built with **Vue 3**, **TypeScript**, *
 - Add to cart with toast notification feedback
 - Cart drawer with quantity controls, remove item, subtotal, savings, and total
 - Sticky header with live cart badge count
+- Responsive layout (mobile, tablet, desktop)
+
+### Authentication
 - User sign-up and login (Firebase Auth)
 - Guest checkout mode (cart persisted to sessionStorage)
+- **Password reset** — "Forgot password?" sends a Firebase reset email
 - Logged-in user cart persisted to Firestore
-- Checkout page with Stripe card element (test mode)
-- Order success page after confirmed payment
-- Order history page (orders stored in Firestore)
-- User profile page
 - Protected routes — redirects unauthenticated users to login
-- Loading spinner and error state handling
-- Responsive layout (mobile, tablet, desktop)
+
+### Checkout & Payments
+- Multi-step checkout: address → payment
+- Saved address picker at checkout (registered users)
+- Stripe card element integration (test mode)
+- **Promo / coupon code** input on cart page and cart drawer (see codes below)
+- Order success page after confirmed payment
+
+### Account Management (`/account`)
+- **My Account tab** — username, email, account type, user ID
+- **My Orders tab** — full order history with reorder and star rating per item
+- **My Address tab** — full saved address management:
+  - Add multiple addresses with label (Home, Work, etc.)
+  - Edit and delete saved addresses
+  - Set a default address
+  - Auto-migrates legacy single address to the new multi-address system
+
+### Saved Addresses
+- Addresses stored in Firestore: `users/{uid}/savedAddresses`
+- At checkout, registered users see a radio-card picker of their saved addresses
+- Selecting a saved address pre-fills the delivery form
+- "Enter new address" option with optional save-to-account checkbox
+
+### Wishlist (`/wishlist`)
+- Heart icon on every product detail page — click to toggle wishlist
+- Red heart = wishlisted; badge count shown in header
+- Wishlist page shows all saved items with add-to-cart and remove
+- Stored in Firestore for registered users, localStorage for guests
+- Accessible via header icon and user dropdown menu
+
+### Search (`/search?q=`)
+- Header search bar navigates to full `/search` results page on Enter
+- Result grid with category filter pills and sort dropdown
+- Sort by: Most Relevant, Price Low→High, Price High→Low, Highest Rated
+- Inline dropdown still shows 6 quick results while typing
+
+### Order Management
+- Order history at `/orders` with reorder functionality
+- **Order detail page** at `/orders/:id`:
+  - Full order summary (date, items, total, shipping status)
+  - Delivery address displayed (if saved on order)
+  - Per-item star rating
+  - Payment reference
+  - Reorder all items button
+- "View Details" link on each order card in history
+
+### SEO
+- `useMeta` composable sets `<title>`, `<meta description>`, and all `og:` tags
+- Applied to: Home, PLP, PDP (reactive — updates when product loads), Login, Sign Up, Cart, Checkout, Account, Order History, Search, Wishlist, Order Detail, Forgot Password
+
+### Error Handling
+- **404 page** — custom "Page not found" with navigation links
+- Catch-all route `/:pathMatch(.*)*` for all unknown URLs
+
+---
+
+## Promo Codes
+
+Enter these in the **cart page** or **cart drawer** promo code field:
+
+| Code | Discount | Description |
+|------|----------|-------------|
+| `SHOPVUE` | 10% off | 10% off your entire order |
+| `SAVE20` | 20% off | 20% off your entire order |
+| `FIRST10` | $10 off | $10 flat discount on your order |
+| `FREESHIP` | Free shipping | Free shipping (already free, but applied) |
+
+> Codes are case-insensitive. Only one code can be active at a time. Click **Remove** to clear an applied code.
 
 ---
 
@@ -124,8 +191,6 @@ Open `http://localhost:5173` in your browser.
 
 ## Project Structure
 
-This project follows the **Alokai monorepo structure** — frontend and middleware are separated into their own apps, mirroring a real production Alokai project.
-
 ```
 alokai-vue/
 ├── apps/
@@ -133,51 +198,109 @@ alokai-vue/
 │   │   └── src/
 │   │       ├── components/
 │   │       │   ├── AddToCartButton.vue
-│   │       │   ├── AppHeader.vue
+│   │       │   ├── AppHeader.vue          # Search → /search, wishlist icon, user menu
 │   │       │   ├── AppFooter.vue
-│   │       │   ├── CartDrawer.vue
+│   │       │   ├── CartDrawer.vue         # Promo code input + discount row
 │   │       │   └── ToastNotification.vue
 │   │       ├── pages/
 │   │       │   ├── HomePage.vue
-│   │       │   ├── ProductDetailPage.vue
-│   │       │   ├── LoginPage.vue
+│   │       │   ├── ProductListPage.vue
+│   │       │   ├── ProductDetailPage.vue  # Wishlist heart toggle
+│   │       │   ├── SearchPage.vue         # NEW — /search?q= results page
+│   │       │   ├── LoginPage.vue          # + "Forgot password?" link
 │   │       │   ├── SignUpPage.vue
-│   │       │   ├── CheckoutPage.vue
+│   │       │   ├── ForgotPasswordPage.vue # NEW — password reset flow
+│   │       │   ├── CartPage.vue           # + Promo code input
+│   │       │   ├── CheckoutPage.vue       # + Saved address picker
+│   │       │   ├── PaymentPage.vue
 │   │       │   ├── OrderSuccessPage.vue
-│   │       │   ├── OrderHistoryPage.vue
+│   │       │   ├── OrderHistoryPage.vue   # + "View Details" link per order
+│   │       │   ├── OrderDetailPage.vue    # NEW — /orders/:id detail page
+│   │       │   ├── WishlistPage.vue       # NEW — /wishlist page
 │   │       │   ├── UserProfilePage.vue
-│   │       │   └── SidePanelPage.vue
+│   │       │   ├── SidePanelPage.vue      # Address tab: full CRUD (add/edit/delete/default)
+│   │       │   └── NotFoundPage.vue       # NEW — 404 catch-all page
 │   │       ├── modules/
 │   │       │   ├── auth/
-│   │       │   │   └── useAuth.ts         # Firebase auth composable
-│   │       │   └── cart/
-│   │       │       └── useCart.ts         # Cart state + Firestore sync
+│   │       │   │   └── useAuth.ts         # + resetPassword() via Firebase
+│   │       │   ├── cart/
+│   │       │   │   └── useCart.ts
+│   │       │   └── products/
+│   │       │       └── useProducts.ts
 │   │       ├── composables/
-│   │       │   └── useToast.ts            # Toast notification composable
+│   │       │   ├── useCheckout.ts
+│   │       │   ├── useSavedAddresses.ts   # NEW — Firestore multi-address CRUD
+│   │       │   ├── useWishlist.ts         # NEW — Firestore/localStorage wishlist
+│   │       │   ├── usePromo.ts            # NEW — promo code engine
+│   │       │   ├── useMeta.ts             # NEW — SEO <title> + og: tags
+│   │       │   └── useToast.ts
 │   │       ├── firebase/
-│   │       │   └── config.ts              # Firebase app initialisation
+│   │       │   └── config.ts
 │   │       ├── router/
-│   │       │   └── index.ts               # Vue Router + auth guards
+│   │       │   └── index.ts               # + new routes + catch-all 404
 │   │       ├── styles/
-│   │       │   └── main.css               # Tailwind + Storefront UI imports
+│   │       │   └── main.css
 │   │       ├── App.vue
 │   │       └── main.ts
 │   │
 │   └── storefront-middleware/             ← Express backend integration layer
 │       └── src/
 │           ├── api/
-│           │   ├── products.ts            # GET /api/products, /api/products/:id
-│           │   ├── cart.ts                # GET /api/carts
-│           │   └── payment.ts             # POST /api/create-payment-intent
+│           │   ├── products.ts
+│           │   ├── cart.ts
+│           │   └── payment.ts
 │           ├── integrations/
-│           │   └── fake-store/            # Connector to Beeceptor fake-store API
+│           │   └── fake-store/
 │           ├── config/
 │           │   └── middleware.config.ts
-│           └── index.ts                   # Express server entry point (port 3000)
+│           └── index.ts
 │
-├── vite.config.ts                         # Vite config (root is apps/storefront)
-├── package.json                           # Root workspace (npm workspaces)
+├── vite.config.ts
+├── package.json
 └── README.md
+```
+
+---
+
+## Routes
+
+| Path | Page | Auth Required |
+|------|------|---------------|
+| `/` | Home | No |
+| `/plp` | Product Listing | No |
+| `/product/:id` | Product Detail | No |
+| `/search?q=` | Search Results | No |
+| `/cart` | Cart | No |
+| `/login` | Login | No |
+| `/signup` | Sign Up | No |
+| `/forgot-password` | Forgot Password | No |
+| `/checkout` | Checkout (Address) | Yes |
+| `/checkout/payment` | Payment | Yes |
+| `/order-success` | Order Success | Yes |
+| `/orders` | Order History | Yes |
+| `/orders/:id` | Order Detail | Yes |
+| `/account` | My Account | Yes |
+| `/user` | User Profile | Yes (non-guest) |
+| `/wishlist` | Wishlist | Yes |
+| `/:pathMatch(.*)` | 404 Not Found | No |
+
+---
+
+## Firestore Data Model
+
+```
+users/{uid}
+  ├── username, email, createdAt
+  ├── wishlist: WishlistItem[]           ← added
+  └── savedAddresses/{addressId}         ← added (subcollection)
+        label, fullName, line1, line2,
+        city, state, zip, country, isDefault
+
+users/{uid}/orders/{orderId}
+  stripePaymentId, items[], total, createdAt, status
+
+carts/{uid}
+  items: CartItem[]
 ```
 
 ---
@@ -191,3 +314,47 @@ Use these on the checkout page — no real charges are made. All cards use any f
 | `4242 4242 4242 4242` | Payment succeeds |
 | `4000 0000 0000 0002` | Payment declined |
 | `4000 0025 0000 3155` | Requires authentication (3D Secure) |
+
+---
+
+## Changelog
+
+### Latest Changes
+
+#### New Pages
+| Page | Route | Description |
+|------|-------|-------------|
+| `ForgotPasswordPage.vue` | `/forgot-password` | Email input → Firebase reset link → success state |
+| `NotFoundPage.vue` | `/:pathMatch(.*)` | Custom 404 with navigation links |
+| `SearchPage.vue` | `/search?q=` | Full results grid, category pills, sort dropdown |
+| `OrderDetailPage.vue` | `/orders/:id` | Full order info, address, per-item rating, reorder |
+| `WishlistPage.vue` | `/wishlist` | Saved products, add-to-cart, remove |
+
+#### New Composables
+| File | Purpose |
+|------|---------|
+| `useSavedAddresses.ts` | Firestore CRUD for multiple saved addresses per user; auto-migrates legacy single address |
+| `useWishlist.ts` | Toggle/persist wishlist — Firestore for registered users, localStorage for guests |
+| `usePromo.ts` | Promo code validation and discount calculation |
+| `useMeta.ts` | Sets `<title>`, `<meta description>`, and `og:` tags; supports reactive refs |
+
+#### Modified Files
+| File | What Changed |
+|------|--------------|
+| `useAuth.ts` | Added `resetPassword()` using Firebase `sendPasswordResetEmail` |
+| `SidePanelPage.vue` | Address tab: replaced stub form with full add/edit/delete/set-default UI backed by Firestore |
+| `CheckoutPage.vue` | Added saved address radio picker; new address mode with optional save; uses `useSavedAddresses` |
+| `AppHeader.vue` | Search submits to `/search?q=` on Enter; wishlist heart icon with badge; "Wishlist" in user dropdown |
+| `CartPage.vue` | Promo code input + applied code display + discount row + adjusted total |
+| `CartDrawer.vue` | Same promo code system as CartPage |
+| `OrderHistoryPage.vue` | Added "View Details" button linking to `/orders/:id` |
+| `ProductDetailPage.vue` | Wishlist heart button (red when active) using `useWishlist` |
+| `router/index.ts` | Added routes: `/forgot-password`, `/search`, `/orders/:id`, `/wishlist`, `/:pathMatch(.*)` |
+| `HomePage.vue` | `useMeta` applied |
+| `ProductListPage.vue` | `useMeta` applied |
+| `LoginPage.vue` | `useMeta` applied + "Forgot password?" link |
+| `SignUpPage.vue` | `useMeta` applied |
+| `CartPage.vue` | `useMeta` applied |
+| `CheckoutPage.vue` | `useMeta` applied |
+| `SidePanelPage.vue` | `useMeta` applied |
+| `OrderHistoryPage.vue` | `useMeta` applied |

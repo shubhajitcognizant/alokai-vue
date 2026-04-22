@@ -1,6 +1,9 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { RouterLink, useRouter } from 'vue-router'
+import { useMeta } from '../composables/useMeta'
+
+useMeta({ title: 'Home', description: 'Shop the best products at ShopVue — free shipping on orders over $50.' })
 import {
   SfButton,
   SfRating,
