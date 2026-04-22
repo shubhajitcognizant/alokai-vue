@@ -15,6 +15,7 @@ import ProductListPage from '../pages/ProductListPage.vue'
 import SearchPage from '../pages/SearchPage.vue'
 import WishlistPage from '../pages/WishlistPage.vue'
 import NotFoundPage from '../pages/NotFoundPage.vue'
+import DealsPage from '../pages/DealsPage.vue'
 
 const router = createRouter({
   history: createWebHistory(),
@@ -37,6 +38,7 @@ const router = createRouter({
     { path: '/checkout/payment', component: PaymentPage, meta: { requiresAuth: true } },
     { path: '/order-success', component: OrderSuccessPage, meta: { requiresAuth: true } },
     { path: '/wishlist', component: WishlistPage, meta: { requiresAuth: true } },
+    { path: '/deals', component: DealsPage },
     { path: '/:pathMatch(.*)*', component: NotFoundPage },
   ],
 })

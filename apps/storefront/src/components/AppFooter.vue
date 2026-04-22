@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
+import { RouterLink } from 'vue-router'
 import { SfButton } from '@storefront-ui/vue'
 import { collection, addDoc, getDocs, query, where } from 'firebase/firestore'
 import { db } from '../firebase/config'
@@ -19,10 +20,10 @@ onMounted(() => {
 })
 
 const shopLinks = [
-  { label: 'New Arrivals', href: '#' },
-  { label: 'Best Sellers', href: '#' },
-  { label: 'Sale', href: '#' },
-  { label: 'All Products', href: '#' },
+  { label: 'New Arrivals', to: '/plp' },
+  { label: 'Best Sellers', to: '/deals#top-picks' },
+  { label: 'Sale', to: '/deals#flash-deals' },
+  { label: 'All Products', to: '/plp' },
 ]
 
 const supportLinks = [
@@ -222,10 +223,12 @@ async function handleNewsletter() {
             v-for="link in shopLinks"
             :key="link.label"
           >
-            <a
-              :href="link.href"
+            <RouterLink
+              :to="link.to"
               class="hover:text-white transition-colors"
-            >{{ link.label }}</a>
+            >
+              {{ link.label }}
+            </RouterLink>
           </li>
         </ul>
       </div>

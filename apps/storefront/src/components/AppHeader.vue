@@ -35,10 +35,10 @@ const userMenuOpen = ref(false)
 const rawProducts = ref<ApiProduct[]>([])
 
 const navLinks = [
-  { label: 'Home', to: '/' },
-  { label: 'Shop', to: '/#shop' },
-  { label: 'Deals', to: '/#deals' },
-  { label: 'Categories', to: '/#categories' },
+ { label: 'Home', to: '/' },
+  { label: 'Shop', to: '/plp' },
+  { label: 'Deals', to: '/deals' },
+  { label: 'Categories', to: '/plp' },
 ]
 
 const searchResults = computed(() => {
