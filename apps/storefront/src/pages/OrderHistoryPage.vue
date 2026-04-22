@@ -1,10 +1,16 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
+import { useRouter } from 'vue-router'
 import { collection, getDocs, orderBy, query, doc, updateDoc } from 'firebase/firestore'
 import { useAuth } from '../modules/auth/useAuth'
 import { useCart } from '../modules/cart/useCart'
 import { db } from '../firebase/config'
 import { SfIconPackage, SfButton } from '@storefront-ui/vue'
+import { useMeta } from '../composables/useMeta'
+
+useMeta({ title: 'Order History', description: 'View and manage all your past orders.' })
+
+const router = useRouter()
 
 interface OrderItem {
   product_id: number
@@ -217,17 +223,26 @@ async function setRating(order: Order, item: OrderItem, stars: number) {
         </ul>
 
         <!-- Footer row -->
-        <div class="px-5 py-3 border-t border-neutral-100 flex items-center justify-between">
+        <div class="px-5 py-3 border-t border-neutral-100 flex items-center justify-between gap-2 flex-wrap">
           <p class="text-xs text-neutral-400">
             Order #{{ order.id.slice(0, 8).toUpperCase() }}
           </p>
-          <SfButton
-            variant="secondary"
-            size="sm"
-            @click="reorder(order)"
-          >
-            {{ reorderedId === order.id ? '✓ Added to cart' : '↺ Reorder' }}
-          </SfButton>
+          <div class="flex gap-2">
+            <SfButton
+              variant="tertiary"
+              size="sm"
+              @click="router.push(`/orders/${order.id}`)"
+            >
+              View Details
+            </SfButton>
+            <SfButton
+              variant="secondary"
+              size="sm"
+              @click="reorder(order)"
+            >
+              {{ reorderedId === order.id ? '✓ Added to cart' : '↺ Reorder' }}
+            </SfButton>
+          </div>
         </div>
       </div>
     </div>
