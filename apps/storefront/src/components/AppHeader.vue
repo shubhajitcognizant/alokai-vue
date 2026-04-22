@@ -209,23 +209,16 @@ onMounted(async () => {
               <SfButton
                 variant="tertiary"
                 class="w-full !justify-start text-sm"
-                @click="userMenuOpen = false; router.push('/user')"
+                @click="userMenuOpen = false; router.push('/account')"
               >
                 My Profile
               </SfButton>
               <SfButton
                 variant="tertiary"
                 class="w-full !justify-start text-sm"
-                @click="userMenuOpen = false; router.push('/orders')"
+                @click="userMenuOpen = false; router.push('/account/orders')"
               >
                 Order History
-              </SfButton>
-              <SfButton
-                variant="tertiary"
-                class="w-full !justify-start text-sm"
-                @click="userMenuOpen = false; router.push('/wishlist')"
-              >
-                Wishlist
               </SfButton>
               <SfButton
                 variant="tertiary"

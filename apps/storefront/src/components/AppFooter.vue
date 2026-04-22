@@ -1,8 +1,22 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { SfButton } from '@storefront-ui/vue'
+import { collection, addDoc, getDocs, query, where } from 'firebase/firestore'
+import { db } from '../firebase/config'
+import { useAuth } from '../modules/auth/useAuth'
+
+const { currentUser } = useAuth()
 
 const newsletterEmail = ref('')
+const submitting      = ref(false)
+const subscribed      = ref(false)
+const errorMsg        = ref('')
+
+onMounted(() => {
+  if (currentUser.value && !currentUser.value.isGuest) {
+    newsletterEmail.value = currentUser.value.email
+  }
+})
 
 const shopLinks = [
   { label: 'New Arrivals', href: '#' },
@@ -25,9 +39,32 @@ const companyLinks = [
   { label: 'Blog', href: '#' },
 ]
 
-function handleNewsletter() {
-  if (newsletterEmail.value) {
+async function handleNewsletter() {
+  const email = newsletterEmail.value.trim().toLowerCase()
+  if (!email) { errorMsg.value = 'Please enter your email address.'; return }
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { errorMsg.value = 'Please enter a valid email address.'; return }
+
+  submitting.value = true
+  errorMsg.value   = ''
+  try {
+    const existing = await getDocs(
+      query(collection(db, 'newsletterSubscribers'), where('email', '==', email))
+    )
+    if (!existing.empty) {
+      subscribed.value = true
+      return
+    }
+    await addDoc(collection(db, 'newsletterSubscribers'), {
+      email,
+      subscribedAt: new Date().toISOString(),
+      userId: currentUser.value?.isGuest ? null : (currentUser.value?.user_id ?? null),
+    })
+    subscribed.value      = true
     newsletterEmail.value = ''
+  } catch {
+    errorMsg.value = 'Something went wrong. Please try again.'
+  } finally {
+    submitting.value = false
   }
 }
 </script>
@@ -45,22 +82,62 @@ function handleNewsletter() {
             Get the latest deals and new arrivals straight to your inbox.
           </p>
         </div>
-        <div class="flex gap-2 w-full md:w-auto md:min-w-[520px]">
-          <span class="flex items-center gap-2 px-4 bg-white rounded-xl text-neutral-500 hover:ring-primary-700 focus-within:caret-primary-700 active:caret-primary-700 active:ring-primary-700 active:ring-2 focus-within:ring-primary-700 focus-within:ring-2 ring-inset ring-1 ring-neutral-300 focus-within:outline focus-within:outline-offset h-[40px] flex-1">
-            <input
-              v-model="newsletterEmail"
-              class="min-w-[80px] w-full text-base outline-hidden appearance-none text-neutral-900 disabled:cursor-not-allowed disabled:bg-transparent read-only:bg-transparent flex-1"
-              size="1"
-              type="email"
-              placeholder="Enter your email"
-            >
-          </span>
-          <SfButton
-            class="shrink-0"
-            @click="handleNewsletter"
+        <div class="w-full md:w-auto md:min-w-[520px]">
+          <!-- Success state -->
+          <div
+            v-if="subscribed"
+            class="flex items-center gap-3 bg-green-700/30 border border-green-600 rounded-xl px-4 py-3"
           >
-            Subscribe
-          </SfButton>
+            <svg
+              class="w-5 h-5 text-green-400 shrink-0"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M5 13l4 4L19 7"
+              />
+            </svg>
+            <p class="text-sm text-green-300 font-medium">
+              You're subscribed! Thanks for joining.
+            </p>
+          </div>
+
+          <!-- Form -->
+          <form
+            v-else
+            class="flex flex-col gap-1.5"
+            @submit.prevent="handleNewsletter"
+          >
+            <div class="flex gap-2">
+              <span class="flex items-center gap-2 px-4 bg-white rounded-xl text-neutral-500 focus-within:ring-primary-700 focus-within:ring-2 ring-inset ring-1 ring-neutral-300 h-[40px] flex-1">
+                <input
+                  v-model="newsletterEmail"
+                  class="min-w-[80px] w-full text-base outline-hidden appearance-none text-neutral-900 flex-1"
+                  size="1"
+                  type="email"
+                  placeholder="Enter your email"
+                  :disabled="submitting"
+                >
+              </span>
+              <SfButton
+                type="submit"
+                class="shrink-0"
+                :disabled="submitting"
+              >
+                {{ submitting ? 'Subscribing…' : 'Subscribe' }}
+              </SfButton>
+            </div>
+            <p
+              v-if="errorMsg"
+              class="text-xs text-red-400"
+            >
+              {{ errorMsg }}
+            </p>
+          </form>
         </div>
       </div>
     </div>
