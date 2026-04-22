@@ -50,6 +50,8 @@ const displayProducts = computed(() => {
   }
 });
 
+const showFilter = ref(false);
+
 const PAGE_SIZE = 10;
 const currentPage = ref(1);
 
@@ -77,23 +79,41 @@ watch(displayProducts, () => { currentPage.value = 1; });
 
 <template>
   <section>
-    <div class="flex flex-row  mx-auto px-5 py-8 gap-6">
-      <div class="basis-1/3">
+    <!-- Mobile filter toggle -->
+    <div class="md:hidden flex items-center justify-between px-5 pt-5 pb-2">
+      <div class="text-lg font-semibold">
+        {{ activeCategory ? activeCategory.charAt(0).toUpperCase() + activeCategory.slice(1) : 'Products' }}
+      </div>
+      <SfButton
+        variant="secondary"
+        size="sm"
+        @click="showFilter = !showFilter"
+      >
+        {{ showFilter ? 'Hide Filters' : 'Filters' }}
+      </SfButton>
+    </div>
+
+    <div class="flex flex-col md:flex-row mx-auto px-5 py-4 md:py-8 gap-6">
+      <!-- Filter panel: always visible on md+, toggle on mobile -->
+      <div
+        :class="showFilter ? 'block' : 'hidden'"
+        class="md:block w-full md:w-1/3"
+      >
         <div class="bg-white rounded-lg shadow-sm p-6">
           <FilterSlidePanel
             :products="products"
             :initial-category="activeCategory"
-            @apply-filters="({ rating, category, priceMin, priceMax }) => { activeRating = rating; activeCategory = category; activePriceMin = priceMin; activePriceMax = priceMax || Infinity; }"
+            @apply-filters="({ rating, category, priceMin, priceMax }) => { activeRating = rating; activeCategory = category; activePriceMin = priceMin; activePriceMax = priceMax || Infinity; showFilter = false; }"
           />
         </div>
       </div>
-      <div class="basis-2/3">
-        <div class="bg-white rounded-lg shadow-sm p-6">
-          <div class="flex justify-between items-center mb-6">
-            <div class="text-lg font-semibold">
+      <div class="w-full md:flex-1">
+        <div class="bg-white rounded-lg shadow-sm p-4 md:p-6">
+          <div class="flex flex-wrap justify-between items-center gap-2 mb-6">
+            <div class="text-lg font-semibold hidden md:block">
               {{ activeCategory ? activeCategory.charAt(0).toUpperCase() + activeCategory.slice(1) : 'Products' }}
             </div>
-            <div class="flex items-center gap-4">
+            <div class="flex flex-wrap items-center gap-3 w-full md:w-auto">
               <p
                 v-if="!loading && !error"
                 class="text-sm text-neutral-500 whitespace-nowrap"
@@ -142,7 +162,7 @@ watch(displayProducts, () => { currentPage.value = 1; });
             {{ error }}
           </div>
           <template v-else>
-            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            <div class="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
               <div
                 v-for="product in paginatedProducts"
                 :key="product.product_id"
@@ -230,7 +250,7 @@ watch(displayProducts, () => { currentPage.value = 1; });
               </SfButton>
             </div>
           </template>
-        </div> 
+        </div>
       </div>
     </div>
   </section>
