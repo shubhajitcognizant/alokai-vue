@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter, RouterLink } from 'vue-router'
 import {
   SfButton,
@@ -33,6 +33,23 @@ const isMobileMenuOpen = ref(false)
 const mobileSearchOpen = ref(false)
 const userMenuOpen = ref(false)
 const rawProducts = ref<ApiProduct[]>([])
+
+// Promo bar with animation
+const promos = [
+  { message: 'Free shipping on orders over $50 — Use code ', bold: 'SHOPVUE', to: '/plp' },
+  { message: 'Members get exclusive deals — ', bold: 'Sign up today!', to: '/signup' },
+]
+const currentPromoIndex = ref(0)
+const promoVisible = ref(true)
+let promoInterval: ReturnType<typeof setInterval> | null = null
+
+function rotatePromo() {
+  promoVisible.value = false
+  setTimeout(() => {
+    currentPromoIndex.value = (currentPromoIndex.value + 1) % promos.length
+    promoVisible.value = true
+  }, 400)
+}
 
 const navLinks = [
  { label: 'Home', to: '/' },
@@ -77,14 +94,28 @@ onMounted(async () => {
     const target = e.target as HTMLElement
     if (!target.closest('[data-user-menu]')) userMenuOpen.value = false
   })
+
+  promoInterval = setInterval(rotatePromo, 4000)
+})
+
+onUnmounted(() => {
+  if (promoInterval) clearInterval(promoInterval)
 })
 </script>
 
 <template>
-  <!-- Announcement bar -->
-  <div class="bg-primary-700 text-white text-xs text-center py-2 px-4">
-    Free shipping on orders over $50 — Use code
-    <span class="font-semibold">SHOPVUE</span>
+  <!-- Promo bar -->
+  <div class="bg-primary-700 text-white text-xs text-center py-2 px-4 overflow-hidden h-8 flex items-center justify-center">
+    <Transition name="promo">
+      <RouterLink
+        v-if="promoVisible"
+        :key="currentPromoIndex"
+        :to="promos[currentPromoIndex].to"
+        class="hover:underline"
+      >
+        {{ promos[currentPromoIndex].message }}<span class="font-semibold">{{ promos[currentPromoIndex].bold }}</span>
+      </RouterLink>
+    </Transition>
   </div>
 
   <header class="sticky top-0 z-20 bg-white shadow-sm">
